@@ -1,0 +1,7 @@
+interface:
+  display_name: "QA Plan"
+  short_description: "Тест-план: виды тестирования, риски, критерии выхода"
+  default_prompt: "Use $qa-plan after qa-intake to choose test types from object properties, build the risk table, set measurable exit criteria and write _qa-plan.md."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,91 @@
+# Golden Q&A для offline-проверки качества поиска по вики.
+# Каждый вопрос — реальный запрос, который агент задаёт по ходу заказа.
+# expected_paths — документы, которые обязаны попасть в топ выдачи.
+# Прогон: python tools/run_offline_retrieval_evals.py --min-precision 0.6 --top-k 5
+
+questions:
+  - id: boundary-values
+    question: как проверить границы длины пароля
+    expected_paths:
+      - docs/03-test-design/boundary-value-analysis.md
+
+  - id: severity-priority
+    question: чем severity отличается от priority
+    expected_paths:
+      - docs/05-defect-management/severity-vs-priority.md
+
+  - id: report-format
+    question: какой формат итогового отчёта заказчику
+    expected_paths:
+      - docs/14-templates/xlsx-test-management.md
+
+  - id: hover-proof
+    question: как доказать отсутствие реакции на наведение
+    expected_paths:
+      - patterns/ui/computed-style-hover-proof.md
+      - bug-taxonomy/ui-states.md
+
+  - id: no-requirements
+    question: что делать если у заказчика нет ТЗ
+    expected_paths:
+      - docs/01-fundamentals/test-oracle-and-limits.md
+
+  - id: form-not-delivered
+    question: форма показывает спасибо но заявка не приходит
+    expected_paths:
+      - bug-taxonomy/forms-validation.md
+      - docs/06-web-testing/forms-and-validation.md
+
+  - id: regression-scope
+    question: как определить объём регресса перед релизом
+    expected_paths:
+      - docs/13-playbooks/regression-before-release.md
+      - docs/02-levels-and-types/smoke-regression-retest.md
+
+  - id: mobile-update
+    question: проверка обновления мобильного приложения поверх старой версии
+    expected_paths:
+      - docs/07-mobile-testing/install-update-store.md
+
+  - id: foreign-object-access
+    question: доступ к чужому заказу по идентификатору
+    expected_paths:
+      - docs/08-api-testing/api-negative-and-security.md
+      - bug-taxonomy/data-and-state.md
+
+  - id: load-permission
+    question: можно ли проводить нагрузочное тестирование на продакшене
+    expected_paths:
+      - docs/10-performance/index.md
+      - docs/10-performance/load-types.md
+
+  - id: exit-criteria
+    question: как сформулировать критерии выхода в тест-плане
+    expected_paths:
+      - docs/04-documentation/test-plan.md
+
+  - id: contrast-check
+    question: какой контраст текста требует wcag
+    expected_paths:
+      - docs/11-security-accessibility/accessibility-wcag.md
+      - checklists/accessibility.md
+
+  - id: pairwise-filters
+    question: как сократить перебор комбинаций фильтров каталога
+    expected_paths:
+      - docs/03-test-design/pairwise-testing.md
+
+  - id: flaky-cause
+    question: автотест падает через раз причины
+    expected_paths:
+      - docs/09-automation/flaky-tests.md
+
+  - id: personal-data
+    question: можно ли использовать реальные данные пользователей в тестировании
+    expected_paths:
+      - docs/11-security-accessibility/personal-data.md
+
+  - id: checklist-or-case
+    question: когда писать тест-кейс а когда достаточно чек-листа
+    expected_paths:
+      - docs/04-documentation/checklist-vs-test-case.md

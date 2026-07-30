@@ -1,0 +1,68 @@
+# LLM QA Wiki
+
+> Практическая русскоязычная база знаний по QA-тестированию веб- и мобильных приложений.
+> Виды и уровни тестирования, техники тест-дизайна, оформление документации и результатов,
+> автоматизация. Плюс система скиллов, ведущая заказ от приёма объекта до XLSX-отчёта.
+
+## Core docs
+
+- [Полный индекс](docs/INDEX.md)
+- [Обзор](docs/00-start-here/overview.md)
+- [Стандарт документа](docs/00-start-here/document-standard.md)
+- [Система скиллов](docs/00-start-here/skill-system.md)
+- [Правила для агентов](AGENTS.md)
+
+## Основные разделы
+
+- [Основы](docs/01-fundamentals/index.md)
+- [Уровни и виды тестирования](docs/02-levels-and-types/index.md)
+- [Техники тест-дизайна](docs/03-test-design/index.md)
+- [Тестовая документация](docs/04-documentation/index.md)
+- [Управление дефектами](docs/05-defect-management/index.md)
+- [Веб-тестирование](docs/06-web-testing/index.md)
+- [Мобильное тестирование](docs/07-mobile-testing/index.md)
+- [Тестирование API](docs/08-api-testing/index.md)
+- [Автоматизация](docs/09-automation/index.md)
+- [Производительность](docs/10-performance/index.md)
+- [Безопасность и доступность](docs/11-security-accessibility/index.md)
+- [Процесс и метрики](docs/12-process-and-metrics/index.md)
+- [Playbooks](docs/13-playbooks/index.md)
+- [Шаблоны](docs/14-templates/index.md)
+
+## Опыт
+
+- [Паттерны](patterns/)
+- [Таксономия дефектов](bug-taxonomy/index.md)
+- [Чек-листы](checklists/)
+- [Уроки](lessons-learned/)
+- [Разборы проектов](case-studies/)
+
+## Формат поставки
+
+- [Спецификация XLSX Test Management](docs/14-templates/xlsx-test-management.md)
+- [Схема входного JSON](docs/14-templates/report-json-schema.md)
+
+## Инструменты
+
+- Поиск по вики: `pwsh tools/ask-wiki.ps1 "<запрос>"`
+- Сборка отчёта: `python tools/build-qa-report.py --input _qa-report.json --out <файл>.xlsx`
+- Проверка отчёта: `python tools/verify-qa-report.py <файл>.xlsx`
+- Состояние пайплайна: `pwsh tools/verify-qa-pipeline.ps1 -ProjectRoot <проект>`
+- Гейт вики: `pwsh tools/ci-local.ps1`
+
+## Rules
+
+- Не копировать чужие книги, статьи, курсы и документацию целиком. Допустим собственный конспект со
+  ссылкой и датой проверки.
+- Версии, требования стандартов и поведение платформ проверять в официальных источниках.
+- Ни один обязательный шаг пайплайна не должен зависеть от MCP-сервера или инструмента конкретного
+  рантайма.
+- Отчёт не отправляется заказчику без прогона валидатора.
+
+## Safety
+
+- Security- и нагрузочные проверки только с письменным разрешением владельца системы.
+- Найденную уязвимость подтверждать минимальным действием и останавливаться.
+- Персональные данные, реквизиты заказчиков и учётные данные не попадают в вики, Git, логи и
+  скриншоты.
+- Кейсы обезличиваются.

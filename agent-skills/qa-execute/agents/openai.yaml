@@ -1,0 +1,7 @@
+interface:
+  display_name: "QA Execute"
+  short_description: "Прогон кейсов и сбор доказательств"
+  default_prompt: "Use $qa-execute after qa-design to run every case, record its result and capture machine-verifiable evidence for each failure in _qa-run.md and evidence/."
+
+policy:
+  allow_implicit_invocation: false

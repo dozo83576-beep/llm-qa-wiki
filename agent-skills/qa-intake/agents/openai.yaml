@@ -1,0 +1,7 @@
+interface:
+  display_name: "QA Intake"
+  short_description: "Приём объекта тестирования и фиксация границ"
+  default_prompt: "Use $qa-intake to record the test object, environment, access, scope boundaries and risks in _qa-intake.md before any testing starts."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: "QA Defects"
+  short_description: "Баг-репорты, severity и трассируемость"
+  default_prompt: "Use $qa-defects after qa-execute to group failures by root cause, justify severity from the taxonomy, keep Fail-to-BR traceability and write _qa-defects.md."
+
+policy:
+  allow_implicit_invocation: false

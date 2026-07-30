@@ -1,0 +1,7 @@
+interface:
+  display_name: "QA Report"
+  short_description: "Сборка XLSX Test Management и прогон валидатора"
+  default_prompt: "Use $qa-report after qa-defects to build _qa-report.json, generate the Test Management XLSX with tools/build-qa-report.py and verify it with tools/verify-qa-report.py before delivery."
+
+policy:
+  allow_implicit_invocation: false

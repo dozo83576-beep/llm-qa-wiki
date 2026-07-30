@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "description": "Машиночитаемый контракт QA-пайплайна. Источник правды о фазах, их зависимостях и артефактах. Скиллы qa-* и tools/verify-qa-pipeline.ps1 читают этот файл, а не хардкодят маршрут.",
+  "artifactRoot": "проектный каталог, обычно D:\\Rabota\\projects\\<проект>",
+  "phases": [
+    {
+      "id": "intake",
+      "skill": "qa-intake",
+      "title": "Приём объекта тестирования",
+      "requires": [],
+      "artifact": "_qa-intake.md",
+      "produces": ["объект и его границы", "окружение", "доступы", "риски", "источник требований"],
+      "gate": "Объект тестирования открывается в заявленном окружении, границы скоупа записаны явно, для каждого риска указано, чем он закрывается."
+    },
+    {
+      "id": "plan",
+      "skill": "qa-plan",
+      "title": "Тест-план",
+      "requires": ["intake"],
+      "artifact": "_qa-plan.md",
+      "produces": ["уровни и виды тестирования", "entry/exit criteria", "выбранные чек-листы", "оценка объёма"],
+      "gate": "Каждый выбранный вид тестирования обоснован свойством объекта из _qa-intake.md, а не взят по инерции. Exit criteria измеримы."
+    },
+    {
+      "id": "design",
+      "skill": "qa-design",
+      "title": "Тест-дизайн",
+      "requires": ["plan"],
+      "artifact": "_qa-cases.md",
+      "produces": ["тест-кейсы TC-NNN", "применённые техники", "покрытие относительно чек-листов"],
+      "gate": "Нумерация TC сплошная с TC-001. У каждого кейса измеримый ожидаемый результат. Для каждого пункта выбранных чек-листов есть кейс либо явная запись, почему не покрыт."
+    },
+    {
+      "id": "execute",
+      "skill": "qa-execute",
+      "title": "Прогон",
+      "requires": ["design"],
+      "artifact": "_qa-run.md",
+      "produces": ["результат по каждому кейсу", "доказательства в evidence/", "фактическое окружение"],
+      "gate": "Каждый кейс из _qa-cases.md имеет результат. У каждого Fail есть машинно проверяемое доказательство, а не только словесное описание."
+    },
+    {
+      "id": "defects",
+      "skill": "qa-defects",
+      "title": "Дефекты",
+      "requires": ["execute"],
+      "artifact": "_qa-defects.md",
+      "produces": ["баг-репорты BR-NNN", "severity и priority", "связь Fail с BR"],
+      "gate": "Каждый Fail из _qa-run.md сослан на существующий BR. Severity обоснована таксономией, а не ощущением. Каждый BR воспроизводим по своим шагам."
+    },
+    {
+      "id": "report",
+      "skill": "qa-report",
+      "title": "Отчёт",
+      "requires": ["defects"],
+      "artifact": "_qa-report.json",
+      "produces": ["_qa-report.json", "outputs/QA_<Проект>_<дата>.xlsx"],
+      "gate": "tools/verify-qa-report.py на собранном файле проходит без ошибок. Итоги Pass/Fail совпадают с _qa-run.md."
+    },
+    {
+      "id": "capture",
+      "skill": "qa-capture",
+      "title": "Фиксация опыта",
+      "requires": ["report"],
+      "artifact": "_qa-learning-review.md",
+      "produces": ["записи в patterns/, lessons-learned/, case-studies/, bug-taxonomy/ либо явный отказ"],
+      "gate": "Каждая внесённая запись обезличена. Если фиксировать нечего — записано «wiki artifact не нужен» и причина."
+    }
+  ]
+}

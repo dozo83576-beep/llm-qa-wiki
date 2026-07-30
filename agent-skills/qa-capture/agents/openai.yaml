@@ -1,0 +1,7 @@
+interface:
+  display_name: "QA Capture"
+  short_description: "Фиксация переиспользуемого опыта в вики"
+  default_prompt: "Use $qa-capture after qa-report to route reusable, anonymised knowledge into patterns, bug-taxonomy, lessons-learned or checklists, or record that no wiki artifact is needed."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: "QA Design"
+  short_description: "Тест-кейсы по техникам тест-дизайна"
+  default_prompt: "Use $qa-design after qa-plan to derive test cases with explicit techniques, keep TC numbering contiguous and record checklist coverage in _qa-cases.md."
+
+policy:
+  allow_implicit_invocation: false

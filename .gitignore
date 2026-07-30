@@ -1,0 +1,22 @@
+# Снапшот корпуса пересобирается локально; в git живёт только манифест.
+embeddings/snapshot.jsonl
+
+# Генерируемые отчёты прогонов CI
+wiki-quality-report.md
+evals-report.md
+.tmp-github-summary.md
+
+# Артефакты заказов сюда не попадают: там данные клиентов
+outputs/
+projects/
+
+# Рабочие каталоги агентов
+.codex-tmp/
+.agent-skills/
+
+# Системное
+Thumbs.db
+desktop.ini
+__pycache__/
+*.pyc
+.venv/

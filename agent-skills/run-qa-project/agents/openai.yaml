@@ -1,0 +1,7 @@
+interface:
+  display_name: "Run QA Project"
+  short_description: "Оркестратор QA-заказа по семи фазам"
+  default_prompt: "Use $run-qa-project to route a testing engagement through qa-intake, qa-plan, qa-design, qa-execute, qa-defects, qa-report and qa-capture, resuming from the phase artifacts already present in the project folder."
+
+policy:
+  allow_implicit_invocation: true
