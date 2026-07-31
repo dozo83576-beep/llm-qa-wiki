@@ -6,4 +6,13 @@ set -e
 
 pwsh -NoProfile -File tools/wiki-audit.ps1
 pwsh -NoProfile -File tools/verify-qa-pipeline.ps1
-pwsh -NoProfile -File tools/verify-agent-skills.ps1
+
+# Раскатка идёт ДО проверки паритета, а не после: иначе правка канона роняла бы
+# коммит на расхождении с рантайм-копиями, которые этот же хук и должен обновить.
+# Трогаем каталоги вне репозитория только когда в коммите реально есть правка скиллов.
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '^agent-skills/'; then
+    echo "pre-commit: изменены скиллы — раскатываю канон в рантаймы"
+    pwsh -NoProfile -File agent-skills/sync-skills.ps1
+fi
+
+pwsh -NoProfile -File tools/verify-agent-skills.ps1 -VerifyUserRuntimes
