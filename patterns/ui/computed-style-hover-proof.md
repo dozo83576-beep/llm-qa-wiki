@@ -1,7 +1,7 @@
 ---
 title: "Pattern: доказательство отсутствия hover через вычисленные стили"
 category: "pattern"
-updated: "2026-07-30"
+updated: "2026-07-31"
 status: "active"
 tags: ["ui", "hover", "evidence", "playwright"]
 source_priority: "internal"
@@ -70,5 +70,7 @@ date: "2026-07-30"
 ## Связанное
 
 - [UI-тестирование](../../docs/02-levels-and-types/ui-testing.md)
+- [Попиксельная проверка ховера](pixel-diff-hover-proof.md) — второй источник на тот же факт: ловит случай,
+  когда вычисленные стили меняются, а на экране не меняется ничего (ссылка вокруг картинки, сдвиг цвета < 1 %).
 - [Сбор доказательств](../../docs/09-automation/evidence-collection.md)
 - [Дефекты состояний интерфейса](../../bug-taxonomy/ui-states.md)

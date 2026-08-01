@@ -1,7 +1,7 @@
 ---
 title: "Доступность"
 category: "checklist"
-updated: "2026-07-30"
+updated: "2026-07-31"
 status: "active"
 tags: ["checklist", "accessibility", "wcag", "keyboard", "contrast"]
 source_priority: "mixed"
@@ -27,6 +27,7 @@ source_priority: "mixed"
 ## Контраст и цвет
 
 - [ ] **Обычный текст не менее 4.5:1** — замер инструментом — QA — block.
+- [ ] **Текст поверх картинки или градиента** — контраст замерен по пикселям отрисованной страницы, а не по CSS-декларации — QA — block — [Паттерн](../patterns/ui/pixel-contrast-on-image-background.md).
 - [ ] **Крупный текст и интерактивные элементы не менее 3:1** — QA — block.
 - [ ] **Состояния hover и focus** проверены на контраст отдельно — QA — warn.
 - [ ] **Цвет не единственный носитель смысла** — статус не только красным или зелёным — QA — block.
