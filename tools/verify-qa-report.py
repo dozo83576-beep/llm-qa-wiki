@@ -10,6 +10,7 @@ verify-qa-report — независимая проверка собранног�
     python tools/verify-qa-report.py отчёт.xlsx --expect-pass 10 --expect-fail 5
     python tools/verify-qa-report.py старый-отчёт.xlsx --legacy
     python tools/verify-qa-report.py отчёт.xlsx --evidence <проект>/evidence
+    python tools/verify-qa-report.py отчёт.xlsx --summary <проект>/outputs/ОТЧЁТ.md
 """
 from __future__ import annotations
 
@@ -211,6 +212,54 @@ def check_evidence_files(evidence_dir: Path, case_ids: list[str], failures: list
             )
 
 
+def check_summary(
+    summary_path: Path,
+    case_ids: list[str],
+    bug_ids: set[str],
+    passed: int,
+    failed: int,
+    failures: list[str],
+) -> None:
+    """Сопроводительный текст сходится с книгой.
+
+    Числа в тексте и в файле разошлись на реальном заказе и продержались три круга
+    обсуждения: в тексте стояло 8 Pass, в книге 10. Заказчик открывает оба документа,
+    и расхождение подрывает доверие ко всему отчёту — раньше, чем он дойдёт до сути.
+    """
+    if not summary_path.is_file():
+        failures.append(f"Сопроводительный отчёт не найден: {summary_path}")
+        return
+
+    body = summary_path.read_text(encoding="utf-8")
+
+    for label, expected in (("Pass", passed), ("Fail", failed)):
+        found = [int(n) for n in re.findall(rf"(\d+)\s*{label}\b", body)]
+        if not found:
+            failures.append(
+                f"В сопроводительном отчёте нет итога по {label}. "
+                f"Ожидается строка вида «Итог: {passed} Pass, {failed} Fail.»"
+            )
+        elif expected not in found:
+            failures.append(
+                f"Итог по {label} не сходится: в тексте {', '.join(map(str, found))}, "
+                f"в книге {expected}."
+            )
+
+    known_cases = {case_id.upper() for case_id in case_ids}
+    for mentioned in sorted(set(m.upper() for m in re.findall(r"\bTC-\d{3,}\b", body))):
+        if mentioned not in known_cases:
+            failures.append(
+                f"Сопроводительный отчёт ссылается на кейс {mentioned}, которого нет в книге."
+            )
+
+    known_bugs = {bug_id.upper() for bug_id in bug_ids}
+    for mentioned in sorted(set(m.upper() for m in re.findall(r"\bBR-\d{3,}\b", body))):
+        if mentioned not in known_bugs:
+            failures.append(
+                f"Сопроводительный отчёт ссылается на дефект {mentioned}, которого нет в книге."
+            )
+
+
 def check_tester(run_ws, failures: list[str]) -> None:
     """Отчёт подписан человеком: пустое поле Tester — отчёт без автора."""
     for row in range(2, run_ws.max_row + 1):
@@ -236,6 +285,7 @@ def verify(
     expect_fail: int | None,
     legacy: bool = False,
     evidence: Path | None = None,
+    summary: Path | None = None,
 ) -> list[str]:
     failures: list[str] = []
     wb = openpyxl.load_workbook(path)
@@ -358,6 +408,10 @@ def verify(
         if evidence is not None:
             check_evidence_files(evidence, case_ids, failures)
 
+    # Сходимость чисел проверяется и в legacy: правило действует всегда, оно не про формат.
+    if summary is not None:
+        check_summary(summary, case_ids, bug_set, passed, failed, failures)
+
     check_formula_errors(wb, failures)
     return failures
 
@@ -379,6 +433,12 @@ def main(argv: list[str]) -> int:
         help="Каталог доказательств. Сверяет файлы с кейсами: у каждого кейса есть снимок, "
              "имя которого начинается с его Case ID, и наоборот.",
     )
+    parser.add_argument(
+        "--summary",
+        default=None,
+        help="Сопроводительный отчёт (outputs/ОТЧЁТ.md). Сверяет числа Pass и Fail с книгой и "
+             "проверяет, что упомянутые TC-NNN и BR-NNN в книге существуют.",
+    )
     args = parser.parse_args(argv)
 
     path = Path(args.report)
@@ -392,6 +452,7 @@ def main(argv: list[str]) -> int:
         args.expect_fail,
         legacy=args.legacy,
         evidence=Path(args.evidence) if args.evidence else None,
+        summary=Path(args.summary) if args.summary else None,
     )
 
     print(f"Проверка отчёта: {path}" + (" (режим legacy)" if args.legacy else ""))

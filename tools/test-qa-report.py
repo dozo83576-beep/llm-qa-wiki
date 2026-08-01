@@ -304,6 +304,36 @@ def main() -> int:
         wb.save(broken)
         expect_failure(results, "пустое поле Tester", broken, "не заполнено поле Tester")
 
+        # Сопроводительный отчёт: числа сходятся с книгой, идентификаторы существуют.
+        summary = workdir / "ОТЧЁТ.md"
+        summary.write_text(
+            "## Что проверено\n\nПроверена шапка example.test, 5 кейсов.\n\n"
+            "Итог: 3 Pass, 2 Fail.\n\n"
+            "## Найденные дефекты\n\n"
+            "### BR-001 — Нет hover-эффекта (Severity: Minor)\n\n"
+            "Проявляется на TC-002 и TC-004.\n",
+            encoding="utf-8",
+        )
+        if verifier.verify(source, None, None, summary=summary):
+            results.bad("сопроводительный отчёт", "согласованный текст не прошёл проверку")
+        else:
+            results.ok("сопроводительный отчёт сходится с книгой")
+
+        for name, text_replace, fragment in (
+            ("число Pass в тексте разошлось с книгой", ("3 Pass", "9 Pass"), "не сходится"),
+            ("ссылка на несуществующий дефект в тексте", ("BR-001", "BR-009"), "дефект BR-009"),
+            ("ссылка на несуществующий кейс в тексте", ("TC-002", "TC-099"), "кейс TC-099"),
+        ):
+            broken_summary = workdir / f"summary-{fragment[:8]}.md"
+            broken_summary.write_text(
+                summary.read_text(encoding="utf-8").replace(*text_replace), encoding="utf-8"
+            )
+            found = verifier.verify(source, None, None, summary=broken_summary)
+            if any(fragment in f for f in found):
+                results.ok(name)
+            else:
+                results.bad(name, f"валидатор не заметил, получено: {found}")
+
         # 7. Доказательство чужого кейса в строке дефекта
         broken = workdir / "broken-evidence-owner.xlsx"
         shutil.copy(source, broken)
