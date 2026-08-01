@@ -13,11 +13,11 @@ source_priority: "internal"
 
 ## Сводка
 
-- Всего документов: **113**
-- Активных: **111**
+- Всего документов: **114**
+- Активных: **112**
 - Redirect-stubs: **0**
 - Archived: **0**
-- Суммарный объём: **334258** символов
+- Суммарный объём: **338058** символов
 
 ## docs
 
@@ -55,7 +55,7 @@ source_priority: "internal"
 | [docs/04-documentation/index.md](../docs/04-documentation/index.md) | Тестовая документация | documentation | 1949 | 2026-07-30 | active | internal |
 | [docs/04-documentation/test-case.md](../docs/04-documentation/test-case.md) | Тест-кейс | documentation | 4284 | 2026-07-31 | active | mixed |
 | [docs/04-documentation/test-plan.md](../docs/04-documentation/test-plan.md) | Тест-план | documentation | 3141 | 2026-07-30 | active | mixed |
-| [docs/04-documentation/test-summary-report.md](../docs/04-documentation/test-summary-report.md) | Отчёт о тестировании | documentation | 2865 | 2026-07-30 | active | mixed |
+| [docs/04-documentation/test-summary-report.md](../docs/04-documentation/test-summary-report.md) | Отчёт о тестировании | documentation | 3542 | 2026-07-30 | active | mixed |
 | [docs/04-documentation/traceability-matrix.md](../docs/04-documentation/traceability-matrix.md) | Матрица трассируемости | documentation | 2994 | 2026-07-30 | active | mixed |
 | [docs/05-defect-management/defect-lifecycle.md](../docs/05-defect-management/defect-lifecycle.md) | Жизненный цикл дефекта | defects | 3133 | 2026-07-30 | active | mixed |
 | [docs/05-defect-management/index.md](../docs/05-defect-management/index.md) | Управление дефектами | defects | 1524 | 2026-07-30 | active | internal |
@@ -105,6 +105,7 @@ source_priority: "internal"
 | [docs/14-templates/bug-report-template.md](../docs/14-templates/bug-report-template.md) | Шаблон баг-репорта | template | 2829 | 2026-07-30 | active | internal |
 | [docs/14-templates/index.md](../docs/14-templates/index.md) | Шаблоны | template | 1217 | 2026-07-30 | active | internal |
 | [docs/14-templates/report-json-schema.md](../docs/14-templates/report-json-schema.md) | Схема _qa-report.json | template | 3670 | 2026-07-30 | active | internal |
+| [docs/14-templates/report-summary-template.md](../docs/14-templates/report-summary-template.md) | Сопроводительный отчёт заказчику | template | 3123 | 2026-08-01 | active | internal |
 | [docs/14-templates/test-case-template.md](../docs/14-templates/test-case-template.md) | Шаблон тест-кейса | template | 2542 | 2026-07-30 | active | internal |
 | [docs/14-templates/test-plan-template.md](../docs/14-templates/test-plan-template.md) | Шаблон тест-плана | template | 2303 | 2026-07-30 | active | internal |
 | [docs/14-templates/xlsx-test-management.md](../docs/14-templates/xlsx-test-management.md) | Спецификация XLSX Test Management | template | 6927 | 2026-07-31 | active | internal |

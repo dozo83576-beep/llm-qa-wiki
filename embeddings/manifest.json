@@ -1,6 +1,6 @@
 {
-  "chunk_count": 862,
-  "corpus_hash": "9698de2b56fc7ed664241a4db71138a519f523282fb900c580b1773ba2636d16",
+  "chunk_count": 875,
+  "corpus_hash": "38aee44a6a10c7815f06b37cfb36454ba20d8177dac01f373d2d2152925bfb00",
   "embedding_model": null,
   "files_indexed": [
     "bug-taxonomy/data-and-state.md",
@@ -98,6 +98,7 @@
     "docs/14-templates/bug-report-template.md",
     "docs/14-templates/index.md",
     "docs/14-templates/report-json-schema.md",
+    "docs/14-templates/report-summary-template.md",
     "docs/14-templates/test-case-template.md",
     "docs/14-templates/test-plan-template.md",
     "docs/14-templates/xlsx-test-management.md",
@@ -113,7 +114,7 @@
     "prompts/post-task-learning-review.md",
     "prompts/qa-intake-questions.md"
   ],
-  "generated_at": "2026-08-01T05:06:05Z",
+  "generated_at": "2026-08-01T05:34:51Z",
   "has_vectors": false,
   "retrieval_mode": "offline-text"
 }
