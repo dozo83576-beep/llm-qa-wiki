@@ -1,7 +1,7 @@
 ---
 title: "QA Wiki INDEX"
 category: "navigation"
-updated: "2026-07-30"
+updated: "2026-08-01"
 status: "active"
 tags: ["index", "navigation"]
 source_priority: "internal"
@@ -13,11 +13,11 @@ source_priority: "internal"
 
 ## Сводка
 
-- Всего документов: **108**
-- Активных: **106**
+- Всего документов: **113**
+- Активных: **111**
 - Redirect-stubs: **0**
 - Archived: **0**
-- Суммарный объём: **304945** символов
+- Суммарный объём: **332827** символов
 
 ## docs
 
@@ -50,10 +50,10 @@ source_priority: "internal"
 | [docs/03-test-design/pairwise-testing.md](../docs/03-test-design/pairwise-testing.md) | Попарное тестирование | test-design | 3146 | 2026-07-30 | active | mixed |
 | [docs/03-test-design/risk-based-testing.md](../docs/03-test-design/risk-based-testing.md) | Risk-based тестирование | test-design | 2998 | 2026-07-30 | active | mixed |
 | [docs/03-test-design/state-transition-testing.md](../docs/03-test-design/state-transition-testing.md) | Диаграммы состояний | test-design | 2799 | 2026-07-30 | active | mixed |
-| [docs/04-documentation/bug-report.md](../docs/04-documentation/bug-report.md) | Баг-репорт | documentation | 3423 | 2026-07-30 | active | internal |
+| [docs/04-documentation/bug-report.md](../docs/04-documentation/bug-report.md) | Баг-репорт | documentation | 3786 | 2026-07-31 | active | internal |
 | [docs/04-documentation/checklist-vs-test-case.md](../docs/04-documentation/checklist-vs-test-case.md) | Чек-лист против тест-кейса | documentation | 2705 | 2026-07-30 | active | internal |
 | [docs/04-documentation/index.md](../docs/04-documentation/index.md) | Тестовая документация | documentation | 1949 | 2026-07-30 | active | internal |
-| [docs/04-documentation/test-case.md](../docs/04-documentation/test-case.md) | Тест-кейс | documentation | 3502 | 2026-07-30 | active | mixed |
+| [docs/04-documentation/test-case.md](../docs/04-documentation/test-case.md) | Тест-кейс | documentation | 4284 | 2026-07-31 | active | mixed |
 | [docs/04-documentation/test-plan.md](../docs/04-documentation/test-plan.md) | Тест-план | documentation | 3141 | 2026-07-30 | active | mixed |
 | [docs/04-documentation/test-summary-report.md](../docs/04-documentation/test-summary-report.md) | Отчёт о тестировании | documentation | 2865 | 2026-07-30 | active | mixed |
 | [docs/04-documentation/traceability-matrix.md](../docs/04-documentation/traceability-matrix.md) | Матрица трассируемости | documentation | 2994 | 2026-07-30 | active | mixed |
@@ -83,6 +83,7 @@ source_priority: "internal"
 | [docs/09-automation/locators-and-page-objects.md](../docs/09-automation/locators-and-page-objects.md) | Локаторы и page object | automation | 3152 | 2026-07-30 | active | mixed |
 | [docs/09-automation/playwright.md](../docs/09-automation/playwright.md) | Playwright | automation | 3177 | 2026-07-30 | active | official-docs |
 | [docs/09-automation/test-pyramid.md](../docs/09-automation/test-pyramid.md) | Пирамида тестирования | automation | 3040 | 2026-07-30 | active | mixed |
+| [docs/09-automation/ui-evidence-runner.md](../docs/09-automation/ui-evidence-runner.md) | Раннер UI-доказательств | automation | 4927 | 2026-07-31 | active | internal |
 | [docs/10-performance/index.md](../docs/10-performance/index.md) | Производительность | performance | 1830 | 2026-07-30 | active | internal |
 | [docs/10-performance/load-types.md](../docs/10-performance/load-types.md) | Виды нагрузочного тестирования | performance | 2968 | 2026-07-30 | active | mixed |
 | [docs/10-performance/metrics.md](../docs/10-performance/metrics.md) | Метрики производительности | performance | 3145 | 2026-07-30 | active | official-docs |
@@ -106,7 +107,7 @@ source_priority: "internal"
 | [docs/14-templates/report-json-schema.md](../docs/14-templates/report-json-schema.md) | Схема _qa-report.json | template | 3228 | 2026-07-30 | active | internal |
 | [docs/14-templates/test-case-template.md](../docs/14-templates/test-case-template.md) | Шаблон тест-кейса | template | 2542 | 2026-07-30 | active | internal |
 | [docs/14-templates/test-plan-template.md](../docs/14-templates/test-plan-template.md) | Шаблон тест-плана | template | 2303 | 2026-07-30 | active | internal |
-| [docs/14-templates/xlsx-test-management.md](../docs/14-templates/xlsx-test-management.md) | Спецификация XLSX Test Management | template | 3963 | 2026-07-30 | active | internal |
+| [docs/14-templates/xlsx-test-management.md](../docs/14-templates/xlsx-test-management.md) | Спецификация XLSX Test Management | template | 6456 | 2026-07-31 | active | internal |
 | [docs/15-maintenance/index.md](../docs/15-maintenance/index.md) | Поддержка вики | maintenance | 1272 | 2026-07-30 | active | internal |
 | [docs/15-maintenance/update-process.md](../docs/15-maintenance/update-process.md) | Как обновлять вики | maintenance | 3002 | 2026-07-30 | active | internal |
 
@@ -115,8 +116,12 @@ source_priority: "internal"
 | Файл | Заголовок | Категория | Объём | Updated | Status | Source priority |
 |------|-----------|-----------|-------|---------|--------|-----------------|
 | [patterns/_template.md](../patterns/_template.md) | Pattern: <краткое название> | pattern | 967 | YYYY-MM-DD | active | internal |
+| [patterns/process/blocked-target-browser-config.md](../patterns/process/blocked-target-browser-config.md) | Pattern: подбор конфигурации браузера, когда сайт не отдаётся скриптам | pattern | 3424 | 2026-07-31 | active | internal |
 | [patterns/process/report-validator-gate.md](../patterns/process/report-validator-gate.md) | Pattern: независимый валидатор отчёта как гейт сдачи | pattern | 2863 | 2026-07-30 | active | internal |
-| [patterns/ui/computed-style-hover-proof.md](../patterns/ui/computed-style-hover-proof.md) | Pattern: доказательство отсутствия hover через вычисленные стили | pattern | 2766 | 2026-07-30 | active | internal |
+| [patterns/ui/computed-style-hover-proof.md](../patterns/ui/computed-style-hover-proof.md) | Pattern: доказательство отсутствия hover через вычисленные стили | pattern | 2986 | 2026-07-31 | active | internal |
+| [patterns/ui/empty-state-proof.md](../patterns/ui/empty-state-proof.md) | Pattern: доказательство пустого состояния без сообщения | pattern | 3566 | 2026-07-31 | active | internal |
+| [patterns/ui/pixel-contrast-on-image-background.md](../patterns/ui/pixel-contrast-on-image-background.md) | Pattern: замер контраста, когда под текстом фоновая картинка | pattern | 2741 | 2026-07-31 | active | internal |
+| [patterns/ui/pixel-diff-hover-proof.md](../patterns/ui/pixel-diff-hover-proof.md) | Pattern: попиксельная проверка ховера — когда стили меняются, а экран нет | pattern | 2999 | 2026-07-31 | active | internal |
 
 ## prompts
 
@@ -130,13 +135,13 @@ source_priority: "internal"
 
 | Файл | Заголовок | Категория | Объём | Updated | Status | Source priority |
 |------|-----------|-----------|-------|---------|--------|-----------------|
-| [checklists/accessibility.md](../checklists/accessibility.md) | Доступность | checklist | 3162 | 2026-07-30 | active | mixed |
+| [checklists/accessibility.md](../checklists/accessibility.md) | Доступность | checklist | 3365 | 2026-07-31 | active | mixed |
 | [checklists/ecommerce.md](../checklists/ecommerce.md) | Интернет-магазин | checklist | 5085 | 2026-07-30 | active | internal |
 | [checklists/functional-web.md](../checklists/functional-web.md) | Функциональное тестирование веба | checklist | 4544 | 2026-07-30 | active | internal |
 | [checklists/mobile-app.md](../checklists/mobile-app.md) | Мобильное приложение | checklist | 4202 | 2026-07-30 | active | internal |
-| [checklists/qa-acceptance.md](../checklists/qa-acceptance.md) | Приёмка и сдача заказа | checklist | 3457 | 2026-07-30 | active | internal |
+| [checklists/qa-acceptance.md](../checklists/qa-acceptance.md) | Приёмка и сдача заказа | checklist | 3692 | 2026-07-30 | active | internal |
 | [checklists/regression-release.md](../checklists/regression-release.md) | Регресс перед релизом | checklist | 3138 | 2026-07-30 | active | internal |
-| [checklists/ui-interface.md](../checklists/ui-interface.md) | UI-интерфейс | checklist | 3285 | 2026-07-30 | active | internal |
+| [checklists/ui-interface.md](../checklists/ui-interface.md) | UI-интерфейс | checklist | 3787 | 2026-07-31 | active | internal |
 | [checklists/ux-experience.md](../checklists/ux-experience.md) | UX-опыт пользователя | checklist | 4732 | 2026-07-30 | active | internal |
 
 ## bug-taxonomy
@@ -147,7 +152,7 @@ source_priority: "internal"
 | [bug-taxonomy/forms-validation.md](../bug-taxonomy/forms-validation.md) | Дефекты форм и валидации | bug-taxonomy | 2997 | 2026-07-30 | active | internal |
 | [bug-taxonomy/index.md](../bug-taxonomy/index.md) | Таксономия дефектов | bug-taxonomy | 1611 | 2026-07-30 | active | internal |
 | [bug-taxonomy/navigation.md](../bug-taxonomy/navigation.md) | Дефекты навигации | bug-taxonomy | 2874 | 2026-07-30 | active | internal |
-| [bug-taxonomy/ui-states.md](../bug-taxonomy/ui-states.md) | Дефекты состояний интерфейса | bug-taxonomy | 2637 | 2026-07-30 | active | internal |
+| [bug-taxonomy/ui-states.md](../bug-taxonomy/ui-states.md) | Дефекты состояний интерфейса | bug-taxonomy | 8064 | 2026-07-31 | active | internal |
 
 ## case-studies
 

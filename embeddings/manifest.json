@@ -1,6 +1,6 @@
 {
-  "chunk_count": 820,
-  "corpus_hash": "e7c024953082e5ae1c5de1296f943e3342c77ec3be243b2f555e4094ad4ea8cc",
+  "chunk_count": 862,
+  "corpus_hash": "7c84a830c769bbfd987722a5ce4bc5e990e87238f3365f7557f646f5a5427cda",
   "embedding_model": null,
   "files_indexed": [
     "bug-taxonomy/data-and-state.md",
@@ -76,6 +76,7 @@
     "docs/09-automation/locators-and-page-objects.md",
     "docs/09-automation/playwright.md",
     "docs/09-automation/test-pyramid.md",
+    "docs/09-automation/ui-evidence-runner.md",
     "docs/10-performance/index.md",
     "docs/10-performance/load-types.md",
     "docs/10-performance/metrics.md",
@@ -102,13 +103,17 @@
     "docs/14-templates/xlsx-test-management.md",
     "docs/15-maintenance/index.md",
     "docs/15-maintenance/update-process.md",
+    "patterns/process/blocked-target-browser-config.md",
     "patterns/process/report-validator-gate.md",
     "patterns/ui/computed-style-hover-proof.md",
+    "patterns/ui/empty-state-proof.md",
+    "patterns/ui/pixel-contrast-on-image-background.md",
+    "patterns/ui/pixel-diff-hover-proof.md",
     "prompts/defect-review.md",
     "prompts/post-task-learning-review.md",
     "prompts/qa-intake-questions.md"
   ],
-  "generated_at": "2026-07-30T17:31:52Z",
+  "generated_at": "2026-07-31T18:40:33Z",
   "has_vectors": false,
   "retrieval_mode": "offline-text"
 }
