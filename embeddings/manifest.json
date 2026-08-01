@@ -1,6 +1,6 @@
 {
   "chunk_count": 862,
-  "corpus_hash": "4553625acdd46589820f00f7faf2804d7b2243c0110eff7facf9917ce3a7ebea",
+  "corpus_hash": "9698de2b56fc7ed664241a4db71138a519f523282fb900c580b1773ba2636d16",
   "embedding_model": null,
   "files_indexed": [
     "bug-taxonomy/data-and-state.md",
@@ -113,7 +113,7 @@
     "prompts/post-task-learning-review.md",
     "prompts/qa-intake-questions.md"
   ],
-  "generated_at": "2026-08-01T04:41:38Z",
+  "generated_at": "2026-08-01T05:06:05Z",
   "has_vectors": false,
   "retrieval_mode": "offline-text"
 }

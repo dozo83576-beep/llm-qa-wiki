@@ -19,6 +19,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Устаревшие генерируемые файлы копятся здесь и валят прогон в самом конце.
+$script:StaleFiles = [System.Collections.Generic.List[string]]::new()
+
 function Invoke-Step {
     param(
         [string]$Name,
@@ -63,7 +66,10 @@ function Assert-CleanGeneratedFile {
     }
 
     git diff -- $Path
-    throw "$Path is stale. Run '$FixCommand' locally and commit the result."
+    # Не бросаем сразу: следующие шаги тоже пересобирают генерируемые файлы, и обрыв
+    # здесь заставлял гонять CI по три раза — каждый прогон доходил на один шаг дальше.
+    # Копим и валим в конце, когда все генераторы отработали.
+    $script:StaleFiles.Add("$Path is stale. Run '$FixCommand' locally and commit the result.") | Out-Null
 }
 
 function Write-StepSummary {
@@ -135,6 +141,13 @@ try {
 
     Invoke-Step "Offline retrieval evals" {
         & python tools/run_offline_retrieval_evals.py --min-precision 0.6 --top-k 5 --top-k-strict 10 --warn-rank 3
+    }
+
+    if ($script:StaleFiles.Count -gt 0) {
+        Write-Host ""
+        Write-Host "Генерируемые файлы устарели: $($script:StaleFiles.Count)"
+        foreach ($item in $script:StaleFiles) { Write-Host "- $item" }
+        throw "Stale generated files: $($script:StaleFiles.Count). Файлы уже пересобраны — закоммить результат."
     }
 
     Write-Host ""
