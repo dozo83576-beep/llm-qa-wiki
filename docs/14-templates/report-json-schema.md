@@ -67,7 +67,7 @@ source_priority: "internal"
   "title": "Нет hover-эффекта у элементов шапки",
   "severity": "Minor",
   "priority": "Medium",
-  "link": "https://example.test/evidence/br-001",
+  "link": "evidence/TC-001.png, evidence/TC-002.png, evidence/run-journal.json",
   "reported": "2026-07-30",
   "rows": [
     {
@@ -75,13 +75,19 @@ source_priority: "internal"
       "preconditions": "Открыта https://example.test/.",
       "step": "Навести курсор на логотип.",
       "expected": "Элемент получает визуальную реакцию.",
-      "actual": "Цвет, фон и рамка не изменяются."
+      "actual": "Цвет, фон и рамка не изменяются.",
+      "link": "evidence/TC-001.png"
     }
   ]
 }
 ```
 
 Поле `environment` у дефекта необязательно: без него берётся значение из корня.
+
+Поле `link` у строки необязательно. Без него генератор сам раскладывает список дефекта по строкам:
+каждой достаются файлы, чьё имя начинается с её `case`, плюс файлы без Case ID в имени — журнал
+прогона нужен всем строкам. Так строка про `TC-021` не ссылается на кадры соседних кейсов. Правило
+именования — в [сборе доказательств](../09-automation/evidence-collection.md).
 
 ## Правила
 

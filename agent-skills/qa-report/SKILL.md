@@ -41,7 +41,7 @@ description: >-
 3. **Прогони валидатор с ожидаемыми итогами:**
 
    ```
-   python D:\Rabota\llm-qa-wiki\tools\verify-qa-report.py outputs\QA_<Проект>_<дата>.xlsx --expect-pass N --expect-fail M
+   python D:\Rabota\llm-qa-wiki\tools\verify-qa-report.py outputs\QA_<Проект>_<дата>.xlsx --expect-pass N --expect-fail M --evidence evidence
    ```
 
    Числа бери из `_qa-run.md`. Расхождение означает ошибку в сборке JSON.
@@ -62,6 +62,8 @@ description: >-
 - Перелинковка на месте: `Case ID` и `Bug ID` на `Test Run`, `Related Case ID` и `Session ID` на
   `Bug Reports` — кликабельны и ведут на свою строку. Ссылки ставит генератор, руками их не правят.
 - Поле `Tester` заполнено именем человека, который вёл заказ.
+- Имя каждого доказательства начинается с Case ID, у каждого кейса свой снимок, и в строке дефекта
+  стоят снимки её `Related Case ID`, а не всей группы. Проверяется ключом `--evidence`.
 - Все `block` из `checklists\qa-acceptance.md` выполнены.
 - В файле и доказательствах нет персональных и учётных данных.
 - Оценка готовности сформулирована через критерии выхода.

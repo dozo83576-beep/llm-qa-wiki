@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -277,6 +278,36 @@ def link_to(cell, sheet: str, row: int) -> None:
     cell.font = LINK_FONT
 
 
+def evidence_case_id(reference: str) -> str | None:
+    """Какому кейсу принадлежит файл доказательства.
+
+    Имя файла начинается с Case ID: TC-001.png, TC-001-2-hover.png, TC-007_hint.png.
+    Путь может содержать каталог и любой разделитель после идентификатора.
+    Возвращает None для файлов, не привязанных к кейсу, — журналов и замеров.
+    """
+    name = str(reference).strip().replace("\\", "/").rsplit("/", 1)[-1]
+    match = re.match(r"^(TC-\d{3,})(?=[^0-9]|$)", name, re.IGNORECASE)
+    return match.group(1).upper() if match else None
+
+
+def row_links(defect_link: str, case_id: str) -> str:
+    """Ссылки на доказательства для одной строки дефекта.
+
+    Раньше в каждую строку группы шёл один и тот же список на весь дефект: строка про
+    TC-021 ссылалась на снимки TC-022, TC-023 и TC-024, и разработчик открывал не тот
+    экран. Оставляем снимки этой строки плюс файлы, не привязанные к кейсу, — журнал
+    прогона нужен каждой строке.
+    """
+    parts = [item.strip() for item in str(defect_link or "").split(",") if item.strip()]
+    if not parts:
+        return ""
+
+    kept = [p for p in parts if evidence_case_id(p) in (None, case_id.upper())]
+    # Если по кейсу не нашлось ничего, отдаём список целиком: у старых входных файлов
+    # имена доказательств могли не следовать правилу, и терять их нельзя.
+    return ", ".join(kept or parts)
+
+
 def case_row_map(cases: list) -> dict:
     """Case ID → строка на листе Test Cases. Порядок гарантирован validate_input."""
     return {str(case["id"]).strip(): index for index, case in enumerate(cases, start=2)}
@@ -435,9 +466,11 @@ def build_bugs_sheet(wb, data: dict, defects: list, case_rows: dict) -> None:
             ws.cell(row=row_index, column=10, value=str(defect["priority"]).strip())
             ws.cell(row=row_index, column=11, value=environment)
 
-            link_cell = ws.cell(row=row_index, column=12, value=link)
-            if link.startswith(("http://", "https://")):
-                link_cell.hyperlink = link
+            # Своя ссылка строки имеет приоритет; иначе список дефекта фильтруется по кейсу.
+            row_link = str(item.get("link") or "").strip() or row_links(link, related)
+            link_cell = ws.cell(row=row_index, column=12, value=row_link)
+            if row_link.startswith(("http://", "https://")):
+                link_cell.hyperlink = row_link
                 link_cell.font = LINK_FONT
 
             date_cell = ws.cell(row=row_index, column=13, value=reported)

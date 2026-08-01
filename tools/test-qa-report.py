@@ -64,7 +64,9 @@ def fixture() -> dict:
         "title": "Нет hover-эффекта у элементов шапки",
         "severity": "Minor",
         "priority": "Medium",
-        "link": "https://example.test/evidence/br-001",
+        # Список на весь дефект: генератор обязан разложить его по строкам — каждой
+        # строке её снимок, а общая ссылка достаётся обеим.
+        "link": "https://example.test/evidence/br-001, TC-002.png, TC-004.png",
         "reported": "2026-07-30",
         "rows": [
             {
@@ -197,6 +199,32 @@ def main() -> int:
         else:
             results.bad("поле Tester", str(testers))
 
+        # Доказательства разложены построчно: в строке про TC-002 не должно быть кадра TC-004.
+        att = {row: wb["Bug Reports"].cell(row=row, column=12).value or "" for row in (2, 3)}
+        if "TC-002.png" in att[2] and "TC-004.png" not in att[2] \
+           and "TC-004.png" in att[3] and "TC-002.png" not in att[3]:
+            results.ok("доказательства разложены по строкам дефекта")
+        else:
+            results.bad("раскладка доказательств", f"строка2={att[2]!r} строка3={att[3]!r}")
+
+        if "br-001" in att[2] and "br-001" in att[3]:
+            results.ok("общая ссылка дефекта досталась обеим строкам")
+        else:
+            results.bad("общая ссылка", f"строка2={att[2]!r} строка3={att[3]!r}")
+
+        # Каталог доказательств: по файлу на каждый кейс фикстуры.
+        ev = workdir / "evidence"
+        ev.mkdir(exist_ok=True)
+        for index in range(1, 6):
+            (ev / f"TC-{index:03d}.png").write_bytes(b"\x89PNG")
+        (ev / "run-journal.json").write_text("{}", encoding="utf-8")
+        (ev / "sub").mkdir(exist_ok=True)
+        (ev / "sub" / "TC-002-2-hover.png").write_bytes(b"\x89PNG")
+        if verifier.verify(source, None, None, evidence=ev):
+            results.bad("каталог доказательств", "полный каталог не прошёл проверку")
+        else:
+            results.ok("каталог доказательств: у каждого кейса свой снимок")
+
         no_tester = dict(fixture())
         no_tester.pop("tester")
         default_path = workdir / "default-tester.xlsx"
@@ -275,6 +303,40 @@ def main() -> int:
         wb["Test Run"].cell(row=2, column=4).value = None
         wb.save(broken)
         expect_failure(results, "пустое поле Tester", broken, "не заполнено поле Tester")
+
+        # 7. Доказательство чужого кейса в строке дефекта
+        broken = workdir / "broken-evidence-owner.xlsx"
+        shutil.copy(source, broken)
+        wb = openpyxl.load_workbook(broken)
+        wb["Bug Reports"].cell(row=2, column=12).value = "TC-004.png"
+        wb.save(broken)
+        expect_failure(results, "снимок чужого кейса в строке дефекта", broken, "не того кейса")
+
+        # 8. У кейса нет доказательства
+        missing = ev / "TC-003.png"
+        missing.rename(ev / "_отложено.png")
+        found = verifier.verify(source, None, None, evidence=ev)
+        if any("нет доказательства" in f for f in found):
+            results.ok("кейс без снимка")
+        else:
+            results.bad("кейс без снимка", f"валидатор не заметил, получено: {found}")
+        (ev / "_отложено.png").rename(missing)
+
+        # 9. Снимок несуществующего кейса — опечатка в имени или лишний файл
+        stray = ev / "TC-099.png"
+        stray.write_bytes(b"\x89PNG")
+        found = verifier.verify(source, None, None, evidence=ev)
+        if any("ни одному кейсу" in f for f in found):
+            results.ok("снимок несуществующего кейса")
+        else:
+            results.bad("лишний снимок", f"валидатор не заметил, получено: {found}")
+
+        # 10. Тот же лишний файл под ключом legacy проходить обязан
+        if verifier.verify(source, None, None, legacy=True, evidence=ev):
+            results.bad("legacy и доказательства", "ключ не снял проверку именования")
+        else:
+            results.ok("legacy снимает и проверку доказательств")
+        stray.unlink()
 
         # Режим legacy: книги, собранные до введения перелинковки и подписи, проверяются
         # по остальным инвариантам. Проверяем обе стороны ключа — иначе он мог бы просто
