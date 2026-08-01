@@ -26,6 +26,7 @@ try:
     from openpyxl.utils import get_column_letter
     from openpyxl.workbook.defined_name import DefinedName
     from openpyxl.worksheet.datavalidation import DataValidation
+    from openpyxl.worksheet.hyperlink import Hyperlink
     from openpyxl.worksheet.table import Table, TableStyleInfo
 except ImportError:
     print("Не установлен openpyxl: pip install openpyxl", file=sys.stderr)
@@ -43,6 +44,10 @@ LOOKUPS = [
 RESULT_VALUES = LOOKUPS[0][1]
 SEVERITY_VALUES = LOOKUPS[1][1]
 PRIORITY_VALUES = LOOKUPS[2][1]
+
+# Заказы ведёт один человек. Имя в поле Tester — его, а не безличное «QA-инженер»:
+# отчёт подписан тем, кто отвечает за результат. Значение из JSON перекрывает умолчание.
+DEFAULT_TESTER = "Николай"
 
 # Двуязычные шапки: английский технический термин + русский перевод второй строкой.
 # Ровно этот вид согласован с заказчиком, менять формулировки нельзя.
@@ -230,7 +235,10 @@ def style_body(ws, first_row: int, last_row: int, col_count: int, row_height: in
         ws.row_dimensions[row].height = row_height
         for col in range(1, col_count + 1):
             cell = ws.cell(row=row, column=col)
-            cell.font = BODY_FONT
+            # Ячейкам со ссылкой шрифт не трогаем: BODY_FONT затёр бы синий
+            # подчёркнутый вид, и ссылка перестала бы читаться как ссылка.
+            if not cell.hyperlink:
+                cell.font = BODY_FONT
             cell.alignment = BODY_ALIGN
             cell.border = BODY_BORDER
 
@@ -253,6 +261,40 @@ def add_dropdown(ws, lookup: str, values: list[str], cell_range: str) -> None:
     )
     ws.add_data_validation(dv)
     dv.add(cell_range)
+
+
+def link_to(cell, sheet: str, row: int) -> None:
+    """Внутренняя ссылка на ячейку другого листа книги.
+
+    Задаётся через location, а не через target: target — это внешний адрес, Excel
+    открыл бы по нему файл, а не перешёл внутри книги.
+
+    Перелинковка не украшение: без неё читатель отчёта ищет кейс по номеру глазами,
+    а руками эти ссылки ставить нельзя — в первом же отчёте, размеченном вручную,
+    три из них вели не туда. Ставит генератор, проверяет verify-qa-report.py.
+    """
+    cell.hyperlink = Hyperlink(ref=cell.coordinate, location=f"'{sheet}'!A{row}")
+    cell.font = LINK_FONT
+
+
+def case_row_map(cases: list) -> dict:
+    """Case ID → строка на листе Test Cases. Порядок гарантирован validate_input."""
+    return {str(case["id"]).strip(): index for index, case in enumerate(cases, start=2)}
+
+
+def defect_row_map(defects: list) -> dict:
+    """Bug ID → строка объявления дефекта на листе Bug Reports.
+
+    Дефект занимает столько строк, сколько у него rows, а идентификатор несёт только
+    первая. Карта считается заранее: Test Run строится раньше Bug Reports и должен
+    знать, куда будет вести ссылка.
+    """
+    rows = {}
+    cursor = 2
+    for defect in defects:
+        rows[str(defect["id"]).strip()] = cursor
+        cursor += len(defect.get("rows") or [])
+    return rows
 
 
 def add_table(ws, name: str, last_row: int, col_count: int) -> None:
@@ -303,14 +345,14 @@ def build_cases_sheet(wb, cases: list) -> None:
     add_dropdown(ws, "PriorityOptions", PRIORITY_VALUES, f"G2:G{last_row}")
 
 
-def build_run_sheet(wb, data: dict, run: list) -> None:
+def build_run_sheet(wb, data: dict, run: list, case_rows: dict, defect_rows: dict) -> None:
     ws = wb.create_sheet("Test Run")
     style_header(ws, RUN_HEADERS)
 
     session = data.get("session") or {}
     session_id = require(session, "id", "Секция session")
     session_name = require(session, "name", "Секция session")
-    tester = require(data, "tester", "Корень отчёта")
+    tester = str(data.get("tester") or "").strip() or DEFAULT_TESTER
     session_date = parse_date(session.get("date"), "session.date")
 
     for index, row in enumerate(run, start=2):
@@ -322,12 +364,20 @@ def build_run_sheet(wb, data: dict, run: list) -> None:
         date_cell.number_format = DATE_FORMAT
         ws.cell(row=index, column=3, value=session_name)
         ws.cell(row=index, column=4, value=tester)
-        ws.cell(row=index, column=5, value=str(row["case"]).strip())
+
+        case_id = str(row["case"]).strip()
+        case_cell = ws.cell(row=index, column=5, value=case_id)
+        if case_id in case_rows:
+            link_to(case_cell, "Test Cases", case_rows[case_id])
+
         ws.cell(row=index, column=6, value=str(row["result"]).strip())
         ws.cell(row=index, column=7, value=str(row.get("comment") or "").strip())
+
         bug = str(row.get("bug") or "").strip()
         if bug:
-            ws.cell(row=index, column=8, value=bug)
+            bug_cell = ws.cell(row=index, column=8, value=bug)
+            if bug in defect_rows:
+                link_to(bug_cell, "Bug Reports", defect_rows[bug])
 
     last_row = len(run) + 1
     style_body(ws, 2, last_row, len(RUN_HEADERS), row_height=60)
@@ -347,7 +397,7 @@ def build_run_sheet(wb, data: dict, run: list) -> None:
         )
 
 
-def build_bugs_sheet(wb, data: dict, defects: list) -> None:
+def build_bugs_sheet(wb, data: dict, defects: list, case_rows: dict) -> None:
     ws = wb.create_sheet("Bug Reports")
     style_header(ws, BUG_HEADERS)
 
@@ -368,8 +418,15 @@ def build_bugs_sheet(wb, data: dict, defects: list) -> None:
             if position == 0:
                 ws.cell(row=row_index, column=1, value=defect_id)
                 ws.cell(row=row_index, column=2, value=title)
-            ws.cell(row=row_index, column=3, value=str(item.get("case") or "").strip())
-            ws.cell(row=row_index, column=4, value=session_id)
+            related = str(item.get("case") or "").strip()
+            related_cell = ws.cell(row=row_index, column=3, value=related)
+            if related in case_rows:
+                link_to(related_cell, "Test Cases", case_rows[related])
+
+            # Session ID на листе Test Run стоит только в первой строке прогона —
+            # туда и ведём, иначе ссылка упиралась бы в пустую ячейку.
+            session_cell = ws.cell(row=row_index, column=4, value=session_id)
+            link_to(session_cell, "Test Run", 2)
             ws.cell(row=row_index, column=5, value=require(item, "preconditions", f"Дефект {defect_id}"))
             ws.cell(row=row_index, column=6, value=require(item, "step", f"Дефект {defect_id}"))
             ws.cell(row=row_index, column=7, value=require(item, "expected", f"Дефект {defect_id}"))
@@ -406,10 +463,16 @@ def build_workbook(data: dict):
     wb = Workbook()
     wb.remove(wb.active)
 
+    defects = data.get("defects") or []
+    # Карты строк считаются до сборки: Test Run строится раньше Bug Reports,
+    # а ссылаться должен на строки, которых ещё нет.
+    case_rows = case_row_map(data["cases"])
+    defect_rows = defect_row_map(defects)
+
     build_data_sheet(wb)
     build_cases_sheet(wb, data["cases"])
-    build_run_sheet(wb, data, data["run"])
-    build_bugs_sheet(wb, data, data.get("defects") or [])
+    build_run_sheet(wb, data, data["run"], case_rows, defect_rows)
+    build_bugs_sheet(wb, data, defects, case_rows)
 
     return wb
 

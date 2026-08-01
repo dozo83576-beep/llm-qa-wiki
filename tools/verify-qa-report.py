@@ -8,6 +8,7 @@ verify-qa-report — независимая проверка собранног�
 Использование:
     python tools/verify-qa-report.py QA_Проект_2026-07-30.xlsx
     python tools/verify-qa-report.py отчёт.xlsx --expect-pass 10 --expect-fail 5
+    python tools/verify-qa-report.py старый-отчёт.xlsx --legacy
 """
 from __future__ import annotations
 
@@ -85,6 +86,73 @@ def check_headers(ws, expected: list[str], failures: list[str]) -> None:
             )
 
 
+def link_target(cell) -> str:
+    """Куда ведёт ячейка. Внутренняя ссылка живёт в location, внешняя — в target."""
+    if cell.hyperlink is None:
+        return ""
+    return text(cell.hyperlink.location or cell.hyperlink.target)
+
+
+def check_link(ws, row: int, col: int, want: str, failures: list[str]) -> None:
+    cell = ws.cell(row=row, column=col)
+    if not text(cell.value):
+        return
+    got = link_target(cell)
+    if not got:
+        failures.append(
+            f"Нет перелинковки в «{ws.title}»!{cell.coordinate} («{text(cell.value)}»): "
+            f"ожидается ссылка на {want}."
+        )
+    elif got != want:
+        failures.append(
+            f"Ссылка в «{ws.title}»!{cell.coordinate} («{text(cell.value)}») ведёт на {got}, "
+            f"ожидается {want}."
+        )
+
+
+def check_links(run_ws, cases_ws, bugs_ws, failures: list[str]) -> None:
+    """Перелинковка идентификаторов между листами.
+
+    Ссылки ставит генератор, поэтому проверка тут не формальность: в первом отчёте,
+    размеченном вручную, три ссылки из четырнадцати вели не на тот лист, а одной
+    не было вовсе. Такую ошибку глазами в книге не видно — она видна только по клику.
+    """
+    case_rows = {
+        text(cases_ws.cell(row=r, column=1).value): r
+        for r in range(2, cases_ws.max_row + 1)
+        if text(cases_ws.cell(row=r, column=1).value)
+    }
+    bug_rows = {
+        text(bugs_ws.cell(row=r, column=1).value): r
+        for r in range(2, bugs_ws.max_row + 1)
+        if text(bugs_ws.cell(row=r, column=1).value)
+    }
+
+    for row in range(2, run_ws.max_row + 1):
+        case_id = text(run_ws.cell(row=row, column=5).value)
+        if case_id in case_rows:
+            check_link(run_ws, row, 5, f"'Test Cases'!A{case_rows[case_id]}", failures)
+        bug_id = text(run_ws.cell(row=row, column=8).value)
+        if bug_id in bug_rows:
+            check_link(run_ws, row, 8, f"'Bug Reports'!A{bug_rows[bug_id]}", failures)
+
+    for row in range(2, bugs_ws.max_row + 1):
+        related = text(bugs_ws.cell(row=row, column=3).value)
+        if related in case_rows:
+            check_link(bugs_ws, row, 3, f"'Test Cases'!A{case_rows[related]}", failures)
+        # Session ID ведёт в первую строку прогона: только там он и проставлен.
+        check_link(bugs_ws, row, 4, "'Test Run'!A2", failures)
+
+
+def check_tester(run_ws, failures: list[str]) -> None:
+    """Отчёт подписан человеком: пустое поле Tester — отчёт без автора."""
+    for row in range(2, run_ws.max_row + 1):
+        if not text(run_ws.cell(row=row, column=5).value):
+            continue
+        if not text(run_ws.cell(row=row, column=4).value):
+            failures.append(f"Строка прогона {row}: не заполнено поле Tester.")
+
+
 def check_formula_errors(wb, failures: list[str]) -> None:
     for ws in wb.worksheets:
         for row in ws.iter_rows():
@@ -95,7 +163,12 @@ def check_formula_errors(wb, failures: list[str]) -> None:
                     failures.append(f"Ошибка формулы в «{ws.title}»!{cell.coordinate}: {cell.value}")
 
 
-def verify(path: Path, expect_pass: int | None, expect_fail: int | None) -> list[str]:
+def verify(
+    path: Path,
+    expect_pass: int | None,
+    expect_fail: int | None,
+    legacy: bool = False,
+) -> list[str]:
     failures: list[str] = []
     wb = openpyxl.load_workbook(path)
 
@@ -207,6 +280,13 @@ def verify(path: Path, expect_pass: int | None, expect_fail: int | None) -> list
     if expect_fail is not None and failed != expect_fail:
         failures.append(f"Итог Fail={failed}, ожидается {expect_fail}.")
 
+    # Перелинковка и подпись введены позже первых заказов. Сданные книги переделывать
+    # не будем, но проверять их иногда нужно — для этого и ключ. Все остальные
+    # инварианты в legacy-режиме проверяются как обычно.
+    if not legacy:
+        check_links(run_ws, cases_ws, bugs_ws, failures)
+        check_tester(run_ws, failures)
+
     check_formula_errors(wb, failures)
     return failures
 
@@ -216,6 +296,12 @@ def main(argv: list[str]) -> int:
     parser.add_argument("report", help="Путь к .xlsx")
     parser.add_argument("--expect-pass", type=int, default=None)
     parser.add_argument("--expect-fail", type=int, default=None)
+    parser.add_argument(
+        "--legacy",
+        action="store_true",
+        help="Не требовать перелинковки и поля Tester. Только для книг, собранных до "
+             "введения этих правил: новые отчёты обязаны их иметь.",
+    )
     args = parser.parse_args(argv)
 
     path = Path(args.report)
@@ -223,9 +309,9 @@ def main(argv: list[str]) -> int:
         print(f"Не найден файл отчёта: {path}", file=sys.stderr)
         return 2
 
-    failures = verify(path, args.expect_pass, args.expect_fail)
+    failures = verify(path, args.expect_pass, args.expect_fail, legacy=args.legacy)
 
-    print(f"Проверка отчёта: {path}")
+    print(f"Проверка отчёта: {path}" + (" (режим legacy)" if args.legacy else ""))
     if failures:
         print(f"Нарушений: {len(failures)}")
         for failure in failures:

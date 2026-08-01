@@ -158,6 +158,54 @@ def main() -> int:
             results.ok("ссылка на доказательство кликабельна")
         else:
             results.bad("гиперссылка", "не проставлена")
+
+        # Перелинковка идентификаторов. Фикстура: кейсы TC-001…TC-005 в строках 2–6,
+        # провалы на TC-002 и TC-004 (строки прогона 3 и 5), дефект BR-001 объявлен
+        # в строке 2 листа Bug Reports и разложен на TC-002 и TC-004.
+        expected_links = [
+            ("Test Run", 2, 5, "'Test Cases'!A2"),
+            ("Test Run", 6, 5, "'Test Cases'!A6"),
+            ("Test Run", 3, 8, "'Bug Reports'!A2"),
+            ("Test Run", 5, 8, "'Bug Reports'!A2"),
+            ("Bug Reports", 2, 3, "'Test Cases'!A3"),
+            ("Bug Reports", 3, 3, "'Test Cases'!A5"),
+            ("Bug Reports", 2, 4, "'Test Run'!A2"),
+            ("Bug Reports", 3, 4, "'Test Run'!A2"),
+        ]
+        wrong = []
+        for sheet, row, col, want in expected_links:
+            cell = wb[sheet].cell(row=row, column=col)
+            got = cell.hyperlink.location if cell.hyperlink else None
+            if got != want:
+                wrong.append(f"{sheet}!{cell.coordinate}: {got} вместо {want}")
+        if wrong:
+            results.bad("перелинковка идентификаторов", "; ".join(wrong))
+        else:
+            results.ok("перелинковка идентификаторов ведёт на нужные строки")
+
+        run_link_font = wb["Test Run"].cell(row=2, column=5).font
+        if run_link_font.underline == "single":
+            results.ok("ссылка в прогоне читается как ссылка")
+        else:
+            results.bad("стиль ссылки", "оформление тела листа затёрло вид гиперссылки")
+
+        testers = {
+            wb["Test Run"].cell(row=r, column=4).value for r in range(2, 7)
+        }
+        if testers == {"Тестировщик"}:
+            results.ok("поле Tester заполнено во всех строках прогона")
+        else:
+            results.bad("поле Tester", str(testers))
+
+        no_tester = dict(fixture())
+        no_tester.pop("tester")
+        default_path = workdir / "default-tester.xlsx"
+        builder.build_workbook(no_tester).save(default_path)
+        got_default = openpyxl.load_workbook(default_path)["Test Run"].cell(row=2, column=4).value
+        if got_default == builder.DEFAULT_TESTER:
+            results.ok("без поля tester подставляется имя по умолчанию")
+        else:
+            results.bad("умолчание Tester", f"получено «{got_default}»")
         if wb["Test Cases"].tables and wb["Test Run"].tables:
             results.ok("автофильтры на месте")
         else:
@@ -202,6 +250,60 @@ def main() -> int:
         wb["Test Run"].cell(row=2, column=8).value = "BR-001"
         wb.save(broken)
         expect_failure(results, "Pass связан с багом", broken, "Pass ошибочно связан с багом")
+
+        # 4. Ссылка ведёт не на тот лист. Ровно эта ошибка нашлась в отчёте,
+        #    размеченном вручную: Case ID указывал на служебный лист Data.
+        broken = workdir / "broken-link-target.xlsx"
+        shutil.copy(source, broken)
+        wb = openpyxl.load_workbook(broken)
+        wb["Test Run"].cell(row=3, column=5).hyperlink.location = "'Data'!A3"
+        wb.save(broken)
+        expect_failure(results, "ссылка Case ID ведёт не на тот лист", broken, "ведёт на 'Data'!A3")
+
+        # 5. Ссылки нет вовсе — тоже находка из ручной разметки.
+        broken = workdir / "broken-link-missing.xlsx"
+        shutil.copy(source, broken)
+        wb = openpyxl.load_workbook(broken)
+        wb["Bug Reports"].cell(row=2, column=3).hyperlink = None
+        wb.save(broken)
+        expect_failure(results, "нет ссылки в Related Case ID", broken, "Нет перелинковки")
+
+        # 6. Отчёт без подписи автора
+        broken = workdir / "broken-tester.xlsx"
+        shutil.copy(source, broken)
+        wb = openpyxl.load_workbook(broken)
+        wb["Test Run"].cell(row=2, column=4).value = None
+        wb.save(broken)
+        expect_failure(results, "пустое поле Tester", broken, "не заполнено поле Tester")
+
+        # Режим legacy: книги, собранные до введения перелинковки и подписи, проверяются
+        # по остальным инвариантам. Проверяем обе стороны ключа — иначе он мог бы просто
+        # глушить проверку целиком.
+        legacy_ok = workdir / "legacy.xlsx"
+        shutil.copy(source, legacy_ok)
+        wb = openpyxl.load_workbook(legacy_ok)
+        for row in range(2, 7):
+            wb["Test Run"].cell(row=row, column=5).hyperlink = None
+            wb["Test Run"].cell(row=row, column=4).value = None
+        for row in range(2, 4):
+            wb["Bug Reports"].cell(row=row, column=3).hyperlink = None
+            wb["Bug Reports"].cell(row=row, column=4).hyperlink = None
+        wb.save(legacy_ok)
+        if verifier.verify(legacy_ok, None, None, legacy=True):
+            results.bad("режим legacy", "старый отчёт не прошёл, хотя ключ это разрешает")
+        else:
+            results.ok("режим legacy пропускает отчёт без ссылок и подписи")
+        expect_failure(results, "тот же отчёт без ключа legacy", legacy_ok, "Нет перелинковки")
+
+        legacy_broken = workdir / "legacy-broken.xlsx"
+        shutil.copy(legacy_ok, legacy_broken)
+        wb = openpyxl.load_workbook(legacy_broken)
+        wb["Test Run"].cell(row=2, column=6).value = "Passed"
+        wb.save(legacy_broken)
+        if verifier.verify(legacy_broken, None, None, legacy=True):
+            results.ok("режим legacy продолжает ловить остальные нарушения")
+        else:
+            results.bad("режим legacy", "заглушил проверку Result, а не только ссылки")
 
         # 4. Fail ссылается на несуществующий дефект
         broken = workdir / "broken-ref.xlsx"
