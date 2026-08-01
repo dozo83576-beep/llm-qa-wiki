@@ -110,6 +110,17 @@ if (-not (Test-Path -LiteralPath $ProjectRoot -PathType Container)) {
 $projectPath = (Resolve-Path -LiteralPath $ProjectRoot).Path
 Write-Host ""
 Write-Host "Project: $projectPath"
+
+# Заказы, выполненные до появления маршрута, помечаются в _qa-pipeline-status.md строкой
+# «Маршрут: legacy». Артефакты фаз им дописывать нельзя — это была бы реконструкция,
+# выданная за протокол. Но и держать такой проект вечно красным вредно: постоянный красный
+# приучает не смотреть на красное. Пометка оставляет факт видимым, не делая его тревогой.
+$legacyMarker = Join-Path $projectPath "_qa-pipeline-status.md"
+$isLegacy = (Test-Path -LiteralPath $legacyMarker -PathType Leaf) -and
+            ((Get-Content -LiteralPath $legacyMarker -Raw -Encoding UTF8) -match '(?m)^\s*Маршрут:\s*legacy\s*$')
+if ($isLegacy) {
+    Write-Host "Маршрут: legacy — заказ выполнен до введения пайплайна"
+}
 Write-Host ""
 
 $done = [System.Collections.Generic.HashSet[string]]::new()
@@ -160,7 +171,12 @@ if ($outOfOrder.Count -gt 0) {
     Write-Host ""
     Write-Host "Нарушен порядок фаз: $($outOfOrder.Count)"
     foreach ($item in $outOfOrder) { Write-Host "- $item" }
-    exit 1
+    if ($isLegacy) {
+        Write-Host "Проект помечен как legacy — нарушение зафиксировано, но не считается ошибкой."
+    }
+    else {
+        exit 1
+    }
 }
 
 if ($RequirePhase) {
