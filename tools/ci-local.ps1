@@ -37,13 +37,33 @@ function Invoke-Step {
 function Assert-CleanGeneratedFile {
     param(
         [string]$Path,
-        [string]$FixCommand
+        [string]$FixCommand,
+        # Строки, меняющиеся при каждой сборке по определению: отметка времени в манифесте
+        # корпуса. Без этого исключения проверка не может пройти никогда — файл всегда
+        # отличается от закоммиченного, и CI застревает на шаге, который сам же и породил.
+        [string[]]$IgnoreLinePattern = @()
     )
 
-    git diff --exit-code -- $Path
-    if ($LASTEXITCODE -ne 0) {
-        throw "$Path is stale. Run '$FixCommand' locally and commit the result."
+    git diff --quiet -- $Path
+    if ($LASTEXITCODE -eq 0) { return }
+
+    $changed = @(git diff -U0 -- $Path |
+        Where-Object { $_ -match '^[+-]' -and $_ -notmatch '^(\+\+\+|---)' })
+
+    if ($IgnoreLinePattern.Count -gt 0) {
+        $changed = @($changed | Where-Object {
+            $line = $_
+            -not ($IgnoreLinePattern | Where-Object { $line -match $_ })
+        })
     }
+
+    if ($changed.Count -eq 0) {
+        Write-Host "  ${Path}: различия только в служебных полях, пропускаю"
+        return
+    }
+
+    git diff -- $Path
+    throw "$Path is stale. Run '$FixCommand' locally and commit the result."
 }
 
 function Write-StepSummary {
@@ -108,7 +128,9 @@ try {
     }
 
     if (-not $SkipGeneratedDiffCheck) {
-        Assert-CleanGeneratedFile -Path "embeddings/manifest.json" -FixCommand "python tools/build_embeddings.py --mode offline-text"
+        Assert-CleanGeneratedFile -Path "embeddings/manifest.json" `
+            -FixCommand "python tools/build_embeddings.py --mode offline-text" `
+            -IgnoreLinePattern '"generated_at"'
     }
 
     Invoke-Step "Offline retrieval evals" {
