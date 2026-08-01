@@ -17,7 +17,9 @@
     pwsh tools/verify-qa-pipeline.ps1 -ProjectRoot D:\Rabota\projects\<проект> -RequirePhase design
 #>
 param(
-    [string]$Root = (Resolve-Path ".").Path,
+    # Корень вики берётся от расположения самого скрипта, а не от текущего каталога:
+    # команда в документации не должна зависеть от того, откуда её запустили.
+    [string]$Root = (Split-Path -Parent $PSScriptRoot),
     [string]$ProjectRoot,
     [string]$RequirePhase
 )
@@ -112,6 +114,7 @@ Write-Host ""
 
 $done = [System.Collections.Generic.HashSet[string]]::new()
 $nextPhase = $null
+$outOfOrder = [System.Collections.Generic.List[string]]::new()
 foreach ($phase in $phases) {
     $artifactPath = Join-Path $projectPath $phase.artifact
     $isDone = $false
@@ -123,7 +126,16 @@ foreach ($phase in $phases) {
 
     if ($isDone) {
         [void]$done.Add($phase.id)
-        $state = "done"
+        if ($blockedBy.Count -gt 0) {
+            # Артефакт есть, а зависимости нет: фаза закрыта раньше своих предпосылок.
+            # Молчать об этом нельзя — так отчёт собирается по кейсам, которых никто не
+            # проектировал, и маршрут выглядит пройденным, хотя половины работы не было.
+            $state = "done (раньше зависимостей: $($blockedBy -join ', '))"
+            $outOfOrder.Add("$($phase.id): артефакт $($phase.artifact) есть, но не закрыты $($blockedBy -join ', ')")
+        }
+        else {
+            $state = "done"
+        }
     }
     elseif ($blockedBy.Count -gt 0) {
         $state = "blocked by: $($blockedBy -join ', ')"
@@ -142,6 +154,13 @@ if ($nextPhase) {
 }
 else {
     Write-Host "Все фазы закрыты."
+}
+
+if ($outOfOrder.Count -gt 0) {
+    Write-Host ""
+    Write-Host "Нарушен порядок фаз: $($outOfOrder.Count)"
+    foreach ($item in $outOfOrder) { Write-Host "- $item" }
+    exit 1
 }
 
 if ($RequirePhase) {
