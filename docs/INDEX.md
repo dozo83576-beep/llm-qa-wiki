@@ -17,7 +17,7 @@ source_priority: "internal"
 - Активных: **111**
 - Redirect-stubs: **0**
 - Archived: **0**
-- Суммарный объём: **332827** символов
+- Суммарный объём: **334258** символов
 
 ## docs
 
@@ -77,7 +77,7 @@ source_priority: "internal"
 | [docs/08-api-testing/contract-and-schema.md](../docs/08-api-testing/contract-and-schema.md) | Проверка контракта и схемы | api | 3172 | 2026-07-30 | active | mixed |
 | [docs/08-api-testing/http-and-status-codes.md](../docs/08-api-testing/http-and-status-codes.md) | HTTP и коды ответов | api | 3214 | 2026-07-30 | active | official-docs |
 | [docs/08-api-testing/index.md](../docs/08-api-testing/index.md) | Тестирование API | api | 1783 | 2026-07-30 | active | internal |
-| [docs/09-automation/evidence-collection.md](../docs/09-automation/evidence-collection.md) | Сбор доказательств | automation | 3455 | 2026-07-30 | active | mixed |
+| [docs/09-automation/evidence-collection.md](../docs/09-automation/evidence-collection.md) | Сбор доказательств | automation | 3973 | 2026-07-30 | active | mixed |
 | [docs/09-automation/flaky-tests.md](../docs/09-automation/flaky-tests.md) | Флаки-тесты | automation | 2810 | 2026-07-30 | active | mixed |
 | [docs/09-automation/index.md](../docs/09-automation/index.md) | Автоматизация | automation | 1840 | 2026-07-30 | active | internal |
 | [docs/09-automation/locators-and-page-objects.md](../docs/09-automation/locators-and-page-objects.md) | Локаторы и page object | automation | 3152 | 2026-07-30 | active | mixed |
@@ -104,10 +104,10 @@ source_priority: "internal"
 | [docs/13-playbooks/regression-before-release.md](../docs/13-playbooks/regression-before-release.md) | Регресс перед релизом | playbook | 3161 | 2026-07-30 | active | internal |
 | [docs/14-templates/bug-report-template.md](../docs/14-templates/bug-report-template.md) | Шаблон баг-репорта | template | 2829 | 2026-07-30 | active | internal |
 | [docs/14-templates/index.md](../docs/14-templates/index.md) | Шаблоны | template | 1217 | 2026-07-30 | active | internal |
-| [docs/14-templates/report-json-schema.md](../docs/14-templates/report-json-schema.md) | Схема _qa-report.json | template | 3228 | 2026-07-30 | active | internal |
+| [docs/14-templates/report-json-schema.md](../docs/14-templates/report-json-schema.md) | Схема _qa-report.json | template | 3670 | 2026-07-30 | active | internal |
 | [docs/14-templates/test-case-template.md](../docs/14-templates/test-case-template.md) | Шаблон тест-кейса | template | 2542 | 2026-07-30 | active | internal |
 | [docs/14-templates/test-plan-template.md](../docs/14-templates/test-plan-template.md) | Шаблон тест-плана | template | 2303 | 2026-07-30 | active | internal |
-| [docs/14-templates/xlsx-test-management.md](../docs/14-templates/xlsx-test-management.md) | Спецификация XLSX Test Management | template | 6456 | 2026-07-31 | active | internal |
+| [docs/14-templates/xlsx-test-management.md](../docs/14-templates/xlsx-test-management.md) | Спецификация XLSX Test Management | template | 6927 | 2026-07-31 | active | internal |
 | [docs/15-maintenance/index.md](../docs/15-maintenance/index.md) | Поддержка вики | maintenance | 1272 | 2026-07-30 | active | internal |
 | [docs/15-maintenance/update-process.md](../docs/15-maintenance/update-process.md) | Как обновлять вики | maintenance | 3002 | 2026-07-30 | active | internal |
 
