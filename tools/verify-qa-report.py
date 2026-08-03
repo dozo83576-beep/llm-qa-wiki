@@ -19,6 +19,8 @@ import re
 import sys
 from pathlib import Path
 
+from evidence_manifest import validate_approved_manifest
+
 try:
     import openpyxl
 except ImportError:
@@ -210,6 +212,11 @@ def check_evidence_files(evidence_dir: Path, case_ids: list[str], failures: list
                 f"Доказательство не соответствует ни одному кейсу: {', '.join(names)} — "
                 f"имя указывает на {owner}, такого кейса в отчёте нет."
             )
+
+
+def check_evidence_manifest(evidence_dir: Path, failures: list[str]) -> None:
+    """Новый functional-прогон должен быть одобрен; legacy без manifest остаётся допустимым."""
+    failures.extend(validate_approved_manifest(evidence_dir))
 
 
 def check_summary(
@@ -407,6 +414,7 @@ def verify(
         check_evidence_naming(bugs_ws, failures)
         if evidence is not None:
             check_evidence_files(evidence, case_ids, failures)
+            check_evidence_manifest(evidence, failures)
 
     # Сходимость чисел проверяется и в legacy: правило действует всегда, оно не про формат.
     if summary is not None:

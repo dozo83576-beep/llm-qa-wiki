@@ -52,6 +52,120 @@ function requirePlaywright() {
   }
 }
 
+async function maximizeWindow(context, page) {
+  const session = await context.newCDPSession(page);
+  const { windowId } = await session.send('Browser.getWindowForTarget');
+  await session.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'maximized' } });
+  const deadline = Date.now() + 5000;
+  let bounds = null;
+  while (Date.now() < deadline) {
+    bounds = (await session.send('Browser.getWindowBounds', { windowId })).bounds;
+    if (bounds.windowState === 'maximized') break;
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  if (!bounds || bounds.windowState !== 'maximized') {
+    throw new Error('Chrome не подтвердил состояние maximized через CDP.');
+  }
+  await page.bringToFront();
+  return { windowId, bounds };
+}
+
+async function browserMetrics(page) {
+  return page.evaluate(() => ({
+    screen: { width: window.screen.width, height: window.screen.height },
+    viewport: { width: window.innerWidth, height: window.innerHeight },
+    devicePixelRatio: window.devicePixelRatio,
+    userAgent: navigator.userAgent
+  }));
+}
+
+function functionalLaunchOptions(config, exe, dir, headless) {
+  const fixed = config.browser.windowState === 'fixed';
+  const options = {
+    executablePath: exe,
+    headless,
+    locale: config.browser.locale || 'ru-RU',
+    viewport: fixed ? config.browser.viewport : null,
+    args: ['--force-device-scale-factor=1', '--no-first-run', '--no-default-browser-check']
+  };
+  if (fixed) {
+    options.screen = config.browser.expectedScreen;
+    options.deviceScaleFactor = 1;
+  } else {
+    options.args.push('--start-maximized');
+  }
+  return options;
+}
+
+function resolveFunctionalProfile(config, projectRoot) {
+  if (process.env.UI_EVIDENCE_PROFILE) return path.resolve(process.env.UI_EVIDENCE_PROFILE);
+  const configured = config.browser && config.browser.profile;
+  return path.resolve(projectRoot, configured || '.browser-profile');
+}
+
+/** Окружение для функциональных полноэкранных снимков schemaVersion=2. */
+async function openFunctional(config, projectRoot) {
+  const { chromium } = requirePlaywright();
+  const headless = process.env.UI_EVIDENCE_HEADLESS === '1';
+  if (headless && config.browser.windowState === 'maximized') {
+    throw new Error('Headless-режим несовместим с windowState="maximized". Для CI используй fixed viewport.');
+  }
+
+  if (config.browser.mode === 'cdp') {
+    const endpoint = config.browser.cdpUrl || process.env.UI_EVIDENCE_CDP_URL;
+    if (!endpoint) throw new Error('Для browser.mode="cdp" задай browser.cdpUrl или UI_EVIDENCE_CDP_URL.');
+    const browser = await chromium.connectOverCDP(endpoint);
+    const sourceContext = browser.contexts()[0];
+    if (!sourceContext) throw new Error('В CDP-браузере нет доступного контекста.');
+    let context = sourceContext;
+    let isolated = false;
+    if (config.browser.isolateContext) {
+      const fixed = config.browser.windowState === 'fixed';
+      context = await browser.newContext({
+        viewport: fixed ? config.browser.viewport : null,
+        screen: fixed ? config.browser.expectedScreen : undefined,
+        deviceScaleFactor: fixed ? 1 : undefined,
+        locale: config.browser.locale || 'ru-RU'
+      });
+      const blockedCookies = new Set(config.browser.cookieBlocklist || []);
+      const siteCookies = (await sourceContext.cookies(config.baseUrl))
+        .filter(cookie => !blockedCookies.has(cookie.name));
+      if (siteCookies.length) await context.addCookies(siteCookies);
+      isolated = true;
+    }
+    const origin = new URL(config.baseUrl).origin;
+    let page = !isolated && context.pages().find(candidate => {
+      try { return new URL(candidate.url()).origin === origin; } catch { return false; }
+    });
+    page = page || (!isolated ? context.pages()[0] : null) || await context.newPage();
+    const window = config.browser.windowState === 'maximized' ? await maximizeWindow(context, page) : null;
+    await page.bringToFront();
+    return {
+      context, page, window,
+      info: { mode: 'cdp', endpoint, profile: null, isolated, headless: false, ...(await browserMetrics(page)) },
+      close: async () => {
+        if (isolated) await context.close();
+        await browser.close();
+      }
+    };
+  }
+
+  const exe = findBrowser();
+  if (!exe) throw new Error('Не найден Chromium. Запусти "npx playwright install chromium" или задай UI_EVIDENCE_BROWSER.');
+  const dir = resolveFunctionalProfile(config, projectRoot);
+  fs.mkdirSync(dir, { recursive: true });
+  const options = functionalLaunchOptions(config, exe, dir, headless);
+  const context = await chromium.launchPersistentContext(dir, options);
+  const page = context.pages()[0] || await context.newPage();
+  const window = config.browser.windowState === 'maximized' ? await maximizeWindow(context, page) : null;
+  await page.bringToFront();
+  return {
+    context, page, window,
+    info: { mode: 'launch', browser: exe, profile: dir, headless, ...(await browserMetrics(page)) },
+    close: () => context.close()
+  };
+}
+
 /** Проверка среды до прогона: движок, браузер, профиль. Возвращает описание найденного. */
 function preflight() {
   const { chromium } = requirePlaywright();
@@ -124,4 +238,7 @@ async function goto(page, url, { attempts = 6, timeout = 45000 } = {}) {
   throw new Error('Навигация не удалась за ' + attempts + ' попыток: ' + lastErr.message.split('\n')[0]);
 }
 
-module.exports = { open, goto, preflight, findBrowser, profileDir, DEFAULT_UA };
+module.exports = {
+  open, goto, preflight, findBrowser, profileDir, DEFAULT_UA, requirePlaywright,
+  openFunctional, maximizeWindow, browserMetrics, functionalLaunchOptions, resolveFunctionalProfile
+};

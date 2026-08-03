@@ -1,6 +1,6 @@
 {
-  "chunk_count": 875,
-  "corpus_hash": "38aee44a6a10c7815f06b37cfb36454ba20d8177dac01f373d2d2152925bfb00",
+  "chunk_count": 902,
+  "corpus_hash": "fb866729b0f8da0dd9b762b523a10b5038d2edfbe5a106b2d122f07734205871",
   "embedding_model": null,
   "files_indexed": [
     "bug-taxonomy/data-and-state.md",
@@ -104,17 +104,20 @@
     "docs/14-templates/xlsx-test-management.md",
     "docs/15-maintenance/index.md",
     "docs/15-maintenance/update-process.md",
+    "lessons-learned/production-form-side-effects.md",
     "patterns/process/blocked-target-browser-config.md",
+    "patterns/process/negative-form-validation-without-signup.md",
     "patterns/process/report-validator-gate.md",
     "patterns/ui/computed-style-hover-proof.md",
     "patterns/ui/empty-state-proof.md",
+    "patterns/ui/fullscreen-web-screenshot-evidence.md",
     "patterns/ui/pixel-contrast-on-image-background.md",
     "patterns/ui/pixel-diff-hover-proof.md",
     "prompts/defect-review.md",
     "prompts/post-task-learning-review.md",
     "prompts/qa-intake-questions.md"
   ],
-  "generated_at": "2026-08-01T05:34:51Z",
+  "generated_at": "2026-08-03T08:40:49Z",
   "has_vectors": false,
   "retrieval_mode": "offline-text"
 }

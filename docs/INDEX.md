@@ -1,7 +1,7 @@
 ---
 title: "QA Wiki INDEX"
 category: "navigation"
-updated: "2026-08-01"
+updated: "2026-08-03"
 status: "active"
 tags: ["index", "navigation"]
 source_priority: "internal"
@@ -13,11 +13,11 @@ source_priority: "internal"
 
 ## Сводка
 
-- Всего документов: **114**
-- Активных: **112**
+- Всего документов: **117**
+- Активных: **115**
 - Redirect-stubs: **0**
 - Archived: **0**
-- Суммарный объём: **338058** символов
+- Суммарный объём: **363559** символов
 
 ## docs
 
@@ -83,7 +83,7 @@ source_priority: "internal"
 | [docs/09-automation/locators-and-page-objects.md](../docs/09-automation/locators-and-page-objects.md) | Локаторы и page object | automation | 3152 | 2026-07-30 | active | mixed |
 | [docs/09-automation/playwright.md](../docs/09-automation/playwright.md) | Playwright | automation | 3177 | 2026-07-30 | active | official-docs |
 | [docs/09-automation/test-pyramid.md](../docs/09-automation/test-pyramid.md) | Пирамида тестирования | automation | 3040 | 2026-07-30 | active | mixed |
-| [docs/09-automation/ui-evidence-runner.md](../docs/09-automation/ui-evidence-runner.md) | Раннер UI-доказательств | automation | 4927 | 2026-07-31 | active | internal |
+| [docs/09-automation/ui-evidence-runner.md](../docs/09-automation/ui-evidence-runner.md) | Раннер UI-доказательств | automation | 7124 | 2026-08-03 | active | internal |
 | [docs/10-performance/index.md](../docs/10-performance/index.md) | Производительность | performance | 1830 | 2026-07-30 | active | internal |
 | [docs/10-performance/load-types.md](../docs/10-performance/load-types.md) | Виды нагрузочного тестирования | performance | 2968 | 2026-07-30 | active | mixed |
 | [docs/10-performance/metrics.md](../docs/10-performance/metrics.md) | Метрики производительности | performance | 3145 | 2026-07-30 | active | official-docs |
@@ -104,11 +104,11 @@ source_priority: "internal"
 | [docs/13-playbooks/regression-before-release.md](../docs/13-playbooks/regression-before-release.md) | Регресс перед релизом | playbook | 3161 | 2026-07-30 | active | internal |
 | [docs/14-templates/bug-report-template.md](../docs/14-templates/bug-report-template.md) | Шаблон баг-репорта | template | 2829 | 2026-07-30 | active | internal |
 | [docs/14-templates/index.md](../docs/14-templates/index.md) | Шаблоны | template | 1217 | 2026-07-30 | active | internal |
-| [docs/14-templates/report-json-schema.md](../docs/14-templates/report-json-schema.md) | Схема _qa-report.json | template | 3670 | 2026-07-30 | active | internal |
+| [docs/14-templates/report-json-schema.md](../docs/14-templates/report-json-schema.md) | Схема _qa-report.json | template | 3804 | 2026-07-30 | active | internal |
 | [docs/14-templates/report-summary-template.md](../docs/14-templates/report-summary-template.md) | Сопроводительный отчёт заказчику | template | 3123 | 2026-08-01 | active | internal |
 | [docs/14-templates/test-case-template.md](../docs/14-templates/test-case-template.md) | Шаблон тест-кейса | template | 2542 | 2026-07-30 | active | internal |
 | [docs/14-templates/test-plan-template.md](../docs/14-templates/test-plan-template.md) | Шаблон тест-плана | template | 2303 | 2026-07-30 | active | internal |
-| [docs/14-templates/xlsx-test-management.md](../docs/14-templates/xlsx-test-management.md) | Спецификация XLSX Test Management | template | 6927 | 2026-07-31 | active | internal |
+| [docs/14-templates/xlsx-test-management.md](../docs/14-templates/xlsx-test-management.md) | Спецификация XLSX Test Management | template | 9453 | 2026-07-31 | active | internal |
 | [docs/15-maintenance/index.md](../docs/15-maintenance/index.md) | Поддержка вики | maintenance | 1272 | 2026-07-30 | active | internal |
 | [docs/15-maintenance/update-process.md](../docs/15-maintenance/update-process.md) | Как обновлять вики | maintenance | 3002 | 2026-07-30 | active | internal |
 
@@ -117,10 +117,12 @@ source_priority: "internal"
 | Файл | Заголовок | Категория | Объём | Updated | Status | Source priority |
 |------|-----------|-----------|-------|---------|--------|-----------------|
 | [patterns/_template.md](../patterns/_template.md) | Pattern: <краткое название> | pattern | 967 | YYYY-MM-DD | active | internal |
-| [patterns/process/blocked-target-browser-config.md](../patterns/process/blocked-target-browser-config.md) | Pattern: подбор конфигурации браузера, когда сайт не отдаётся скриптам | pattern | 3424 | 2026-07-31 | active | internal |
+| [patterns/process/blocked-target-browser-config.md](../patterns/process/blocked-target-browser-config.md) | Pattern: подбор конфигурации браузера, когда сайт не отдаётся скриптам | pattern | 4839 | 2026-08-03 | active | internal |
+| [patterns/process/negative-form-validation-without-signup.md](../patterns/process/negative-form-validation-without-signup.md) | Pattern: негативная проверка полей формы без создания учётной записи | pattern | 3672 | 2026-08-02 | active | internal |
 | [patterns/process/report-validator-gate.md](../patterns/process/report-validator-gate.md) | Pattern: независимый валидатор отчёта как гейт сдачи | pattern | 2863 | 2026-07-30 | active | internal |
 | [patterns/ui/computed-style-hover-proof.md](../patterns/ui/computed-style-hover-proof.md) | Pattern: доказательство отсутствия hover через вычисленные стили | pattern | 2986 | 2026-07-31 | active | internal |
 | [patterns/ui/empty-state-proof.md](../patterns/ui/empty-state-proof.md) | Pattern: доказательство пустого состояния без сообщения | pattern | 3566 | 2026-07-31 | active | internal |
+| [patterns/ui/fullscreen-web-screenshot-evidence.md](../patterns/ui/fullscreen-web-screenshot-evidence.md) | Pattern: полноэкранные скриншоты веб-страниц без обрезок | pattern | 11031 | 2026-08-03 | active | mixed |
 | [patterns/ui/pixel-contrast-on-image-background.md](../patterns/ui/pixel-contrast-on-image-background.md) | Pattern: замер контраста, когда под текстом фоновая картинка | pattern | 2741 | 2026-07-31 | active | internal |
 | [patterns/ui/pixel-diff-hover-proof.md](../patterns/ui/pixel-diff-hover-proof.md) | Pattern: попиксельная проверка ховера — когда стили меняются, а экран нет | pattern | 2999 | 2026-07-31 | active | internal |
 
@@ -153,7 +155,7 @@ source_priority: "internal"
 | [bug-taxonomy/forms-validation.md](../bug-taxonomy/forms-validation.md) | Дефекты форм и валидации | bug-taxonomy | 2997 | 2026-07-30 | active | internal |
 | [bug-taxonomy/index.md](../bug-taxonomy/index.md) | Таксономия дефектов | bug-taxonomy | 1611 | 2026-07-30 | active | internal |
 | [bug-taxonomy/navigation.md](../bug-taxonomy/navigation.md) | Дефекты навигации | bug-taxonomy | 2874 | 2026-07-30 | active | internal |
-| [bug-taxonomy/ui-states.md](../bug-taxonomy/ui-states.md) | Дефекты состояний интерфейса | bug-taxonomy | 8064 | 2026-07-31 | active | internal |
+| [bug-taxonomy/ui-states.md](../bug-taxonomy/ui-states.md) | Дефекты состояний интерфейса | bug-taxonomy | 9487 | 2026-08-01 | active | internal |
 
 ## case-studies
 
@@ -167,6 +169,7 @@ source_priority: "internal"
 | Файл | Заголовок | Категория | Объём | Updated | Status | Source priority |
 |------|-----------|-----------|-------|---------|--------|-----------------|
 | [lessons-learned/_template.md](../lessons-learned/_template.md) | Lesson: <краткая формулировка вывода> | lesson | 723 | YYYY-MM-DD | active | internal |
+| [lessons-learned/production-form-side-effects.md](../lessons-learned/production-form-side-effects.md) | Lesson: на продакшене проверяй защиту от побочных эффектов до серии, и на своём канале | lesson | 3103 | 2026-08-02 | active | internal |
 
 
 ## Принципы

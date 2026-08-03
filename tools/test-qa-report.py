@@ -16,6 +16,7 @@ import json
 import shutil
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 
 import openpyxl
@@ -137,10 +138,29 @@ def main() -> int:
     try:
         data = fixture()
         source = workdir / "report.xlsx"
-        builder.build_workbook(data).save(source)
+        builder.save_workbook(builder.build_workbook(data), source)
 
         print("Позитивные проверки")
         expect_clean(results, "чистый отчёт проходит валидатор", source, expect_pass=3, expect_fail=2)
+
+        with zipfile.ZipFile(source, "r") as package:
+            xml = "\n".join(
+                package.read(name).decode("utf-8")
+                for name in package.namelist()
+                if name.endswith(".xml")
+            )
+        encoded_non_ascii = []
+        for match in builder.NUMERIC_XML_ENTITY.finditer(xml):
+            codepoint = int(match.group(1), 16) if match.group(1) else int(match.group(2), 10)
+            if codepoint >= 128:
+                encoded_non_ascii.append(match.group(0))
+        if "Шапка: проверка элемента 1" in xml and not encoded_non_ascii:
+            results.ok("кириллица записана обычным UTF-8 для Windows Excel")
+        else:
+            results.bad(
+                "совместимость кириллицы",
+                f"литеральный текст={('Шапка: проверка элемента 1' in xml)}, XML-коды={encoded_non_ascii[:3]}",
+            )
 
         wb = openpyxl.load_workbook(source)
         if wb.sheetnames == ["Data", "Test Cases", "Test Run", "Bug Reports"]:
@@ -228,7 +248,7 @@ def main() -> int:
         no_tester = dict(fixture())
         no_tester.pop("tester")
         default_path = workdir / "default-tester.xlsx"
-        builder.build_workbook(no_tester).save(default_path)
+        builder.save_workbook(builder.build_workbook(no_tester), default_path)
         got_default = openpyxl.load_workbook(default_path)["Test Run"].cell(row=2, column=4).value
         if got_default == builder.DEFAULT_TESTER:
             results.ok("без поля tester подставляется имя по умолчанию")

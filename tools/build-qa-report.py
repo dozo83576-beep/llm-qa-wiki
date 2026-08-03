@@ -17,6 +17,8 @@ import argparse
 import json
 import re
 import sys
+import tempfile
+import zipfile
 from datetime import datetime
 from pathlib import Path
 
@@ -97,12 +99,24 @@ HEADER_ALIGN = Alignment(horizontal="center", vertical="center", wrap_text=True)
 HEADER_BORDER = Border(*[Side(style="thin", color="A6A6A6")] * 4)
 
 BODY_FONT = Font(size=10, color="000000")
-BODY_ALIGN = Alignment(vertical="top", wrap_text=True)
+# Короткие поля — идентификаторы, статусы, даты — стоят по центру: колонка узкая, значение
+# читается как метка. Длинные тексты выключены влево и прижаты к нижнему краю: абзац в пять
+# строк по центру читать тяжело, глазу не за что зацепиться в начале строки.
+BODY_ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
+BODY_ALIGN_TEXT = Alignment(horizontal="left", vertical="bottom", wrap_text=True)
+
+# Номера столбцов, которые выравниваются по центру. Остальные — текстовые.
+CENTERED_CASE_COLS = {1, 7}                       # Case ID, Priority
+CENTERED_RUN_COLS = {1, 2, 4, 5, 6, 8}            # Session ID, Date, Tester, Case ID, Result, Bug ID
+CENTERED_BUG_COLS = {1, 3, 4, 9, 10, 11, 12, 13}  # Bug ID, Related Case ID, Session ID, Severity,
+                                                  # Priority, Environment, Attachments/Links, Date Reported
 BODY_BORDER = Border(*[Side(style="thin", color="D9D9D9")] * 4)
 
 LINK_FONT = Font(size=10, color="0563C1", underline="single")
 
-DATE_FORMAT = "yyyy-mm-dd hh:mm"
+# Даты в книге читает заказчик, а не машина: привычный ему день.месяц.год.
+# На вход по-прежнему принимается ISO — разбором занимается parse_date.
+DATE_FORMAT = "dd.mm.yyyy"
 
 RESULT_STYLES = {
     "Pass": ("C6EFCE", "006100"),
@@ -231,16 +245,72 @@ def style_header(ws, headers, height=46) -> None:
     ws.freeze_panes = "A2"
 
 
-def style_body(ws, first_row: int, last_row: int, col_count: int, row_height: int) -> None:
+# Ширина столбца в символах и высота строки в пунктах связаны через размер шрифта тела:
+# в 10 pt строка занимает ~13.2 pt по высоте, а в одну «единицу ширины» помещается ~1 символ.
+LINE_HEIGHT_PT = 13.2
+# Отступы держим минимальными: лишнего воздуха в ячейке быть не должно, но текст не должен
+# упираться в границу.
+ROW_PADDING_PT = 2.0
+COL_PADDING = 1
+MIN_COL_WIDTH = 9
+# Без потолка столбец с шагами кейса растянулся бы на пол-экрана и книгу пришлось бы
+# листать вбок. Текст при этом не теряется: он переносится, а высота строки считается ниже.
+MAX_COL_WIDTH = 58
+
+
+def wrapped_lines(value, width: int) -> int:
+    """Сколько строк займёт значение в ячейке заданной ширины.
+
+    Ширина столбца считается в условных символах, а шрифт пропорциональный: строка из «Ш» и «ы»
+    шире строки из «i» и «л». Берём 0.9 от номинала — ошибка уходит в сторону лишнего сантиметра
+    высоты, а не обрезанного текста.
+    """
+    text = "" if value is None else str(value)
+    per_line = max(1, int(width * 0.9))
+    total = 0
+    for segment in text.splitlines() or [""]:
+        total += max(1, -(-len(segment) // per_line))
+    return max(1, total)
+
+
+def fit_columns(ws, headers, first_row: int, last_row: int) -> list[int]:
+    """Ширина столбца — по самой длинной строке его содержимого, в пределах потолка.
+
+    Заголовок учитывается тоже: подпись столбца не должна обрезаться. Ширина «ровно под
+    текст» экономит место там, где значения короткие (Severity, Priority, даты), и не даёт
+    книге разъехаться там, где они длинные.
+    """
+    widths = []
+    for col in range(1, len(headers) + 1):
+        longest = max((len(part) for part in str(headers[col - 1][0]).splitlines()), default=0)
+        for row in range(first_row, last_row + 1):
+            value = ws.cell(row=row, column=col).value
+            if value is None:
+                continue
+            longest = max(longest, max((len(part) for part in str(value).splitlines()), default=0))
+        width = min(MAX_COL_WIDTH, max(MIN_COL_WIDTH, longest + COL_PADDING))
+        ws.column_dimensions[get_column_letter(col)].width = width
+        widths.append(width)
+    return widths
+
+
+def fit_rows(ws, first_row: int, last_row: int, widths: list[int]) -> None:
+    """Высота строки — ровно под самую высокую ячейку, чтобы текст был виден целиком."""
     for row in range(first_row, last_row + 1):
-        ws.row_dimensions[row].height = row_height
+        lines = max(wrapped_lines(ws.cell(row=row, column=col).value, widths[col - 1])
+                    for col in range(1, len(widths) + 1))
+        ws.row_dimensions[row].height = round(lines * LINE_HEIGHT_PT + ROW_PADDING_PT, 1)
+
+
+def style_body(ws, first_row: int, last_row: int, col_count: int, centered: set[int]) -> None:
+    for row in range(first_row, last_row + 1):
         for col in range(1, col_count + 1):
             cell = ws.cell(row=row, column=col)
             # Ячейкам со ссылкой шрифт не трогаем: BODY_FONT затёр бы синий
             # подчёркнутый вид, и ссылка перестала бы читаться как ссылка.
             if not cell.hyperlink:
                 cell.font = BODY_FONT
-            cell.alignment = BODY_ALIGN
+            cell.alignment = BODY_ALIGN_CENTER if col in centered else BODY_ALIGN_TEXT
             cell.border = BODY_BORDER
 
 
@@ -370,7 +440,8 @@ def build_cases_sheet(wb, cases: list) -> None:
         ws.cell(row=index, column=7, value=str(case["priority"]).strip())
 
     last_row = len(cases) + 1
-    style_body(ws, 2, last_row, len(CASE_HEADERS), row_height=96)
+    style_body(ws, 2, last_row, len(CASE_HEADERS), CENTERED_CASE_COLS)
+    fit_rows(ws, 2, last_row, fit_columns(ws, CASE_HEADERS, 2, last_row))
     add_table(ws, "TestCasesTable", last_row, len(CASE_HEADERS))
 
     add_dropdown(ws, "PriorityOptions", PRIORITY_VALUES, f"G2:G{last_row}")
@@ -411,7 +482,8 @@ def build_run_sheet(wb, data: dict, run: list, case_rows: dict, defect_rows: dic
                 link_to(bug_cell, "Bug Reports", defect_rows[bug])
 
     last_row = len(run) + 1
-    style_body(ws, 2, last_row, len(RUN_HEADERS), row_height=60)
+    style_body(ws, 2, last_row, len(RUN_HEADERS), CENTERED_RUN_COLS)
+    fit_rows(ws, 2, last_row, fit_columns(ws, RUN_HEADERS, 2, last_row))
     add_table(ws, "TestRunTable", last_row, len(RUN_HEADERS))
 
     add_dropdown(ws, "ResultOptions", RESULT_VALUES, f"F2:F{last_row}")
@@ -481,9 +553,9 @@ def build_bugs_sheet(wb, data: dict, defects: list, case_rows: dict) -> None:
     if last_row < 2:
         # Книга без дефектов легальна: прогон мог пройти полностью зелёным.
         last_row = 2
-        ws.row_dimensions[2].height = 132
     else:
-        style_body(ws, 2, last_row, len(BUG_HEADERS), row_height=132)
+        style_body(ws, 2, last_row, len(BUG_HEADERS), CENTERED_BUG_COLS)
+        fit_rows(ws, 2, last_row, fit_columns(ws, BUG_HEADERS, 2, last_row))
         add_table(ws, "BugReportsTable", last_row, len(BUG_HEADERS))
 
         add_dropdown(ws, "SeverityOptions", SEVERITY_VALUES, f"I2:I{last_row}")
@@ -508,6 +580,58 @@ def build_workbook(data: dict):
     build_bugs_sheet(wb, data, defects, case_rows)
 
     return wb
+
+
+NUMERIC_XML_ENTITY = re.compile(r"&#(?:x([0-9A-Fa-f]+)|([0-9]+));")
+
+
+def normalize_xlsx_unicode(path: Path) -> int:
+    """Заменить не-ASCII XML-коды в XLSX на обычный UTF-8.
+
+    Некоторые сборки Excel под Windows показывают числовые XML-сущности из inline-строк
+    буквально. OOXML допускает обычный UTF-8, поэтому перепаковываем только XML-части книги,
+    сохраняя метаданные ZIP-записей. Исходный файл заменяется лишь после проверки архива.
+    """
+    replacements = 0
+
+    def decode_non_ascii_entity(match: re.Match[str]) -> str:
+        nonlocal replacements
+        codepoint = int(match.group(1), 16) if match.group(1) else int(match.group(2), 10)
+        if codepoint < 128 or codepoint > 0x10FFFF or 0xD800 <= codepoint <= 0xDFFF:
+            return match.group(0)
+        replacements += 1
+        return chr(codepoint)
+
+    with tempfile.NamedTemporaryFile(
+        prefix=f".{path.stem}-", suffix=".xlsx.tmp", dir=path.parent, delete=False
+    ) as temp_file:
+        temp_path = Path(temp_file.name)
+
+    try:
+        with zipfile.ZipFile(path, "r") as source_zip, zipfile.ZipFile(temp_path, "w") as target_zip:
+            for info in source_zip.infolist():
+                content = source_zip.read(info.filename)
+                if info.filename.endswith(".xml"):
+                    xml = content.decode("utf-8")
+                    content = NUMERIC_XML_ENTITY.sub(decode_non_ascii_entity, xml).encode("utf-8")
+                target_zip.writestr(info, content)
+
+        with zipfile.ZipFile(temp_path, "r") as check_zip:
+            damaged_entry = check_zip.testzip()
+            if damaged_entry:
+                raise RuntimeError(f"Повреждённый элемент XLSX: {damaged_entry}")
+
+        temp_path.replace(path)
+    finally:
+        temp_path.unlink(missing_ok=True)
+
+    return replacements
+
+
+def save_workbook(wb, path: Path) -> int:
+    """Сохранить книгу в совместимом с Windows Excel OOXML."""
+    wb.save(path)
+    return normalize_xlsx_unicode(path)
 
 
 def main(argv: list[str]) -> int:
@@ -535,13 +659,14 @@ def main(argv: list[str]) -> int:
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    wb.save(out_path)
+    converted_entities = save_workbook(wb, out_path)
 
     cases = len(data["cases"])
     passed = sum(1 for row in data["run"] if row["result"] == "Pass")
     failed = sum(1 for row in data["run"] if row["result"] == "Fail")
     print(f"Собран {out_path}")
     print(f"Кейсов: {cases} | Pass: {passed} | Fail: {failed} | Дефектов: {len(data.get('defects') or [])}")
+    print(f"Совместимость Windows Excel: преобразовано XML-кодов: {converted_entities}")
     return 0
 
 

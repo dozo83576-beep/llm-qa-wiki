@@ -1,0 +1,69 @@
+{
+  "_комментарий": "Образец функционального прогона со снимком всей видимой области сайта. Скопировать в проект как ui-cases.json.",
+  "schemaVersion": 2,
+  "runner": "functional-screenshots",
+  "baseUrl": "https://example.test/",
+  "allowedOrigins": ["https://example.test"],
+  "evidencePolicy": "all",
+  "browser": {
+    "mode": "launch",
+    "windowState": "maximized",
+    "expectedScreen": { "width": 1920, "height": 1080 }
+  },
+  "capture": {
+    "mode": "viewport",
+    "scroll": "top",
+    "scale": "css",
+    "animations": "disabled",
+    "stableFrames": 2,
+    "stableIntervalMs": 500,
+    "stableTimeoutMs": 12000,
+    "maxDiffRatio": 0.001,
+    "collapseEmptyAds": [
+      { "container": ".header-ann", "slot": ":scope > .ad-slot", "optional": true }
+    ]
+  },
+  "readiness": {
+    "readySelector": "body",
+    "timeoutMs": 45000,
+    "fonts": true,
+    "visibleImages": true,
+    "forbiddenTitle": "(Checking|Just a moment|Attention Required|Проверка)",
+    "forbiddenText": "(404|Page not found|Страница не найдена)"
+  },
+  "cases": [
+    {
+      "id": "TC-001",
+      "name": "Открытие главной страницы",
+      "startUrl": "/",
+      "steps": [],
+      "ready": { "selector": "header" },
+      "capture": { "target": "header", "scroll": "top" }
+    },
+    {
+      "id": "TC-002",
+      "name": "Поиск с фильтром",
+      "startUrl": "/search/",
+      "steps": [
+        { "action": "fill", "selector": "input[name='query']", "value": "BMW" },
+        { "action": "select", "selector": "select[name='year']", "value": "2020" },
+        { "action": "click", "selector": "button[type='submit']" },
+        { "action": "waitForUrl", "value": "/results/" },
+        { "action": "waitForSelector", "selector": ".result-card", "captureAfter": "results", "captureReady": ".result-card", "captureTarget": ".result-card" }
+      ],
+      "ready": { "selector": ".result-card" },
+      "capture": { "target": ".result-card", "scroll": "anchor" }
+    },
+    {
+      "id": "TC-003",
+      "name": "Открытие OAuth",
+      "startUrl": "/login/",
+      "steps": [
+        { "action": "waitForSelector", "selector": "a.oauth", "captureAfter": "login-source", "captureReady": "a.oauth", "captureTarget": "header" },
+        { "action": "click", "selector": "a.oauth", "expectPage": "oauth" }
+      ],
+      "ready": { "page": "oauth", "selector": "body", "allowedOrigins": ["https://accounts.example.test"] },
+      "capture": { "page": "oauth", "scroll": "top" }
+    }
+  ]
+}
