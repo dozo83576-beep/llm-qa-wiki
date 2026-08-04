@@ -27,7 +27,11 @@ pwsh tools/ui-evidence/Invoke-UiEvidence.ps1 -ProjectRoot D:\Rabota\projects\<п
 
 До `-Approve` действующий `evidence/` не изменяется. Сначала открой
 `.evidence-runs/<run-id>/contact-sheet.png` и проверь каждый Case ID вместе с кадрами
-`captureAfter`.
+`captureAfter`. Основной кадр должен показывать результат кейса; точные дубликаты основных PNG
+блокируют прогон. Для переходов используй «до/после», а для невидимых свойств — `capture.proof` с
+декларативной метрикой. `primaryCaptureAfter` позволяет назначить информативный промежуточный кадр
+основным. `capture.contextSelector` проверяет, что в кадре осталась шапка или другой контекст
+страницы; для внешнего popup унаследованное правило отключается значением `false`.
 
 ## Файлы
 
@@ -49,6 +53,18 @@ pwsh tools/ui-evidence/Invoke-UiEvidence.ps1 -ProjectRoot D:\Rabota\projects\<п
 - Модуль `playwright` — глобально (`npm i -g playwright`) либо тот, что приехал с `@playwright/mcp`.
 - Браузер Chromium: `npx playwright install chromium`.
 
+Optional accessibility check использует только локально закреплённый `axe-core 4.12.1`:
+`npm ci --prefix tools/ui-evidence`. Раннер ничего не устанавливает; если `checks.accessibility`
+включён, а dependency отсутствует, имеет другую версию либо SHA-256 `axe.min.js` не совпадает с
+`axe-integrity.json`, прогон блокируется до запуска браузера.
+Настройка поддерживает `tags`, boolean-`rules`, `include` и `exclude`, глобально и на уровне кейса.
+После шагов создаётся `accessibility/<Case ID>.json`, а после approval —
+`evidence/data/accessibility/<Case ID>.json`; manifest хранит version, применённые настройки,
+counts и SHA-256. `violations` и `incomplete` не меняют QA verdict автоматически, а `incomplete`
+всегда получает `manual_review_required: true`; автоматический результат не доказывает WCAG compliance.
+Raw HTML не сохраняется, а selector/failure summary проходят redaction; человек всё равно проверяет
+artifact на чувствительные данные перед передачей наружу.
+
 Проверить всё сразу: `pwsh tools/ui-evidence/Invoke-UiEvidence.ps1 -Check`.
 
 Для persistent-профиля, которому нужна ручная авторизация или проверка сайта:
@@ -63,8 +79,15 @@ pwsh tools/ui-evidence/Invoke-UiEvidence.ps1 -Config .\ui-cases.json -ProjectRoo
 Для CDP-сессии `browser.isolateContext: true` создаёт отдельный контекст прогона и переносит в него
 только cookies `baseUrl`. Это сохраняет ручную проверку тестируемого сайта, но не наследует сессии
 Google и других внешних сервисов. В шагах с `captureAfter` можно задать `captureReady`,
-`captureTarget`, `capturePage` и `captureAllowedOrigins`. URL в manifest и сетевом журнале
+`captureTarget`, `captureAnchor`, `captureProof`, `capturePage` и `captureAllowedOrigins`. Действие
+`clickAt` воспроизводит касание свободной области координатами `x`, `y`. URL в manifest и сетевом журнале
 автоматически очищаются от токенов, ПДн и значений query-параметров.
+
+Ожидания `waitForText`, `waitForCount`, `waitForAttribute`, `waitForHidden` и соответствующие
+assertions подтверждают состояние приложения после клика. Начальный URL и `goto` повторяются по
+настройкам `navigation`. `diagnostics.trace="failures"` сохраняет trace только для заблокированных
+кейсов. Частичный `-Approve` объединяет переснятые кейсы с предыдущей ревизией и сохраняет
+`sourceRunId`; разные окружения молча не смешиваются.
 
 Для незаполненных рекламных слотов можно задать `capture.collapseEmptyAds`: раннер сворачивает
 только проверенный пустой контейнер и записывает изменение в manifest. В CDP-режиме

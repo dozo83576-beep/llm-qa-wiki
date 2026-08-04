@@ -52,19 +52,50 @@ contact sheet; legacy-конфиги продолжают работать ка�
    | `focus-opens` | раскрывается ли блок, когда триггер получает фокус | `trigger`, `panel` |
    | `tab-inside` | доходит ли фокус до полей внутри раскрытого блока | `trigger`, `panel`, `presses`, `expectFocusOn` |
 
-   Functional-кейс использует `goto`, `click`, `fill`, `select`, `check`, `uncheck`, `press`,
-   `back`, `reload`, `waitForUrl` и `waitForSelector`. `captureAfter` добавляет промежуточный кадр;
-   его состояние уточняют `captureReady`, `captureTarget`, `capturePage` и
-   `captureAllowedOrigins`. Для CDP можно включить `browser.isolateContext: true`: раннер перенесёт
+   Functional-кейс использует `goto`, `click`, `clickAt`, `fill`, `select`, `check`, `uncheck`, `press`,
+   `back`, `reload`, `waitForUrl`, `waitForSelector`, `waitForText`, `waitForCount`,
+   `waitForAttribute`, `waitForHidden`, `assertUrl`, `assertText` и `assertCount`.
+   Предметные ожидания повторно читают состояние до timeout и нужны после действий, где
+   Playwright-доступность кнопки ещё не означает обновление бизнес-состояния. `captureAfter` добавляет промежуточный кадр;
+   его состояние уточняют `captureReady`, `captureTarget`, `captureAnchor`, `capturePage` и
+   `captureAllowedOrigins`. `primaryCaptureAfter` назначает смысловой промежуточный кадр основным
+   `<Case ID>.png`. `clickAt` безопасно воспроизводит касание свободной области по координатам `x`,
+   `y`, не допуская произвольный JavaScript. Для CDP можно включить `browser.isolateContext: true`: раннер перенесёт
    только cookies `baseUrl`, не наследуя авторизацию внешних сервисов. Имена cookies из
    `browser.cookieBlocklist` не переносятся — это позволяет сохранить Cloudflare/consent и не
    наследовать авторизацию тестируемого сайта.
+
+   Все `startUrl` и шаги `goto` используют `navigation.attempts`, `timeoutMs`, `retryDelayMs` и
+   ограниченное ожидание `networkIdleTimeoutMs`. Исчерпание повторов даёт `Blocked` категории
+   `environment`, а не функциональный `Fail`. Связанные кейсы можно пометить одинаковым
+   `stateGroup`; независимые кейсы обязаны сами создавать предусловия.
+
+   `capture.proof` и `captureProof` временно добавляют на PNG название доказываемого результата,
+   пояснение, рамки вокруг элементов и безопасные декларативные метрики: `page-overflow`,
+   `image-health`, `navigation-timing`, `element-box`, `element-state`. Накладка удаляется сразу
+   после снимка, а значения записываются в manifest. Она нужна для невидимых свойств и не может
+   маскировать отсутствие нужного состояния на самом кадре.
 
    Если сайт резервирует место под незаполненную рекламу, `capture.collapseEmptyAds` принимает
    правила `{ "container": "...", "slot": "...", "optional": true }`. Контейнер сворачивается
    только когда объявленный слот скрыт или имеет нулевой размер и внутри нет видимого iframe,
    изображения, video, canvas, object или embed. Заполненная реклама не изменяется. Каждое
    срабатывание записывается в `manifest.cases[].collapsedEmptyAds` с исходной высотой блока.
+
+   `capture.contextSelector` требует присутствия в основном кадре шапки или другого идентификатора
+   страницы; `false` отключает унаследованное правило для popup или внешней страницы. Manifest
+   раздельно хранит физический `screen`, CSS-`viewport` и размер PNG `image`. Для диагностики можно
+   явно включить `diagnostics.trace: "failures"`; trace остаётся во внутреннем каталоге прогона и
+   не переносится в клиентский ZIP.
+
+   Optional `checks.accessibility` запускает локальный `axe-core 4.12.1` после всех шагов кейса и
+   раскрытия проверяемого состояния. Разрешены `tags`, boolean-`rules`, `include` и `exclude`;
+   case-level настройка переопределяет global. Dependency устанавливается отдельно командой
+   `npm ci --prefix tools/ui-evidence`; отсутствие, несовпадение версии или SHA-256 `axe.min.js`
+   с tracked metadata блокирует прогон до запуска браузера. Raw HTML узлов не сохраняется,
+   selector и failure summary очищаются от типовых секретов и ПДн. JSON по Case ID и manifest сохраняют engine version, применённые фильтры,
+   violations, incomplete, counts и SHA-256. `incomplete` всегда требует ручного review;
+   автоматические findings не меняют QA verdict и не доказывают WCAG compliance.
 
 3. **Запустить прогон:**
 
@@ -81,7 +112,10 @@ contact sheet; legacy-конфиги продолжают работать ка�
    pwsh tools/ui-evidence/Invoke-UiEvidence.ps1 -ProjectRoot <проект> -Approve <run-id>
    ```
 
-   Только после этого PNG и одобренный manifest появляются в `evidence/`.
+   Только после этого PNG и одобренный manifest появляются в `evidence/`. При `-Approve` частичного
+   прогона прежние кейсы сохраняются, заменённые получают новый `sourceRunId`, устаревшие detail-файлы
+   уходят в backup, а номер ревизии увеличивается. Смешение screen, viewport, DPR, User-Agent или
+   режима браузера в одной утверждённой ревизии блокируется.
 
 4. **Посмотреть снимки.** Курсор в снимок страницы браузер не пишет — его рисует операционная
    система, поэтому раннер дорисовывает указатель сам, накладкой поверх страницы. Накладка ставится
@@ -108,16 +142,19 @@ contact sheet; legacy-конфиги продолжают работать ка�
 ## Проверка
 
 - `-Check` показывает версию `playwright`, путь к браузеру и профиль — до прогона, а не после сбоя.
-- `-Check -Config <functional-config>` реально открывает Chrome и проверяет разрешение дисплея,
+- `-Check -Config <functional-config>` реально открывает настроенный Chromium/Chrome и проверяет разрешение дисплея,
   maximized/fixed-режим, viewport и фактический User-Agent.
 - Заведомо неверный селектор даёт `Blocked` с причиной и код возврата 2, а не «зелёный» результат:
   раннер отличает «панели нет в DOM» (ошибка конфига) от «панель есть, но не раскрывается» (факт о
   системе).
 - В `meta` каждого прогона записаны URL, HTTP-код, число навигаций, длительность, браузер, профиль
   и User-Agent — прогон воспроизводим.
-- Functional quality gate проверяет PNG, единый viewport, URL, target, пустой кадр, большие
-  внутренние белые полосы и дубликаты.
-  Дубликат без подтверждающего `captureAfter` остаётся предупреждением. URL manifest очищаются от
+- Functional quality gate проверяет PNG, единый размер основных viewport-кадров, единую ширину
+  full-page кадров, URL, target/context, пустой кадр, большие
+  внутренние белые полосы и дубликаты. Точный дубликат основного PNG между Case ID — ошибка,
+  независимо от наличия `captureAfter`; detail-кадр может иметь другой размер, а визуально похожие
+  кадры проверяются по contact sheet.
+  URL manifest очищаются от
   токенов и ПДн, значения query-параметров сетевого журнала редактируются. Ошибка или неодобренный
   прогон блокируют XLSX/ZIP-поставку.
 

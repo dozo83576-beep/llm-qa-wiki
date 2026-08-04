@@ -1,7 +1,7 @@
 ---
 title: "Pattern: негативная проверка полей формы без создания учётной записи"
 category: "pattern"
-updated: "2026-08-02"
+updated: "2026-08-04"
 status: "active"
 tags: ["forms", "registration", "validation", "production", "captcha"]
 source_priority: "internal"
@@ -71,3 +71,6 @@ date: "2026-08-02"
 - `patterns/ui/empty-state-proof.md` — доказательство поведения через тело ответа сервера.
 - `lessons-learned/production-form-side-effects.md` — что делать, если контроль показал, что защита
   не работает.
+- `patterns/process/disposable-mailbox-full-flow.md` — обратная по духу задача: не избежать создания
+  записи, а довести регистрацию/вход/восстановление пароля до конца вымышленной, но полноценной
+  учётной записью.

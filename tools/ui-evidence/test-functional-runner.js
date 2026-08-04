@@ -20,7 +20,7 @@ async function startServer() {
   const server = http.createServer((req, res) => {
     res.setHeader('content-type', 'text/html; charset=utf-8');
     if (req.url === '/second') {
-      res.end(page('<main><a id="back" href="/">Назад</a><div id="second">Вторая страница</div></main>'));
+      res.end(page('<main style="background:#e5eef6"><a id="back" href="/">Назад</a><div id="second">Вторая страница</div><div style="height:620px;background:#d8e7f3;margin-top:12px">Содержательная область</div></main>'));
       return;
     }
     if (req.url === '/popup') {
@@ -41,6 +41,13 @@ async function startServer() {
     }
     if (req.url === '/challenge') {
       res.end(page('<main><div id="challenge">Проверка</div></main>', `document.title='Just a moment';setTimeout(()=>{document.title='Готово';document.querySelector('#challenge').id='ready'},150)`));
+      return;
+    }
+    if (req.url === '/state') {
+      res.end(page(
+        '<header id="header">Шапка</header><main><div id="counter" data-state="pending">0</div><div class="spinner">Загрузка</div><div id="cards"></div></main>',
+        `setTimeout(()=>{const counter=document.querySelector('#counter');counter.textContent='1';counter.dataset.state='ready';document.querySelector('.spinner').remove();const card=document.createElement('article');card.className='card';card.textContent='Товар';document.querySelector('#cards').append(card)},150)`
+      ));
       return;
     }
     res.end(page(
@@ -157,9 +164,13 @@ test('functional runner captures stable viewport states, popup and partial selec
       },
       {
         id: 'TC-002', startUrl: '/',
+        primaryCaptureAfter: 'second',
         steps: [
           { action: 'click', selector: '#next' },
-          { action: 'waitForUrl', value: '/second', captureAfter: 'second', captureReady: '#second' },
+          {
+            action: 'waitForUrl', value: '/second', captureAfter: 'second', captureReady: '#second',
+            captureProof: { title: 'TC-002 · вторая страница', highlights: ['#second'] }
+          },
           { action: 'back' },
           { action: 'waitForSelector', selector: '#header' }
         ],
@@ -179,7 +190,14 @@ test('functional runner captures stable viewport states, popup and partial selec
       },
       {
         id: 'TC-005', startUrl: '/', steps: [],
-        ready: { selector: '#header' }, capture: { target: '#header', scroll: 'top' }
+        ready: { selector: '#header' },
+        capture: {
+          target: '#header', scroll: 'top',
+          proof: {
+            title: 'TC-005 · шапка видима', position: 'bottom-right', highlights: ['#header'],
+            metrics: [{ type: 'element-state', selector: '#header', label: 'Шапка' }]
+          }
+        }
       }
     ];
     const result = await runCapture({ config: config(baseUrl, cases), projectRoot: project });
@@ -188,13 +206,17 @@ test('functional runner captures stable viewport states, popup and partial selec
       result.manifest.cases.every(item => item.status === 'captured'),
       JSON.stringify(result.manifest.cases.map(({ id, status, reason }) => ({ id, status, reason })))
     );
-    assert.ok(result.manifest.warnings.some(item => /TC-004.*TC-005|TC-005.*TC-004/.test(item)));
+    assert.ok(!result.manifest.errors.some(item => /TC-004.*TC-005|TC-005.*TC-004/.test(item)));
+    assert.equal(result.manifest.cases[4].proof.title, 'TC-005 · шапка видима');
     assert.ok(fs.existsSync(path.join(result.runDir, 'contact-sheet.png')));
     assert.ok(fs.existsSync(path.join(result.runDir, 'browser-events.json')));
     assert.equal(result.manifest.cases[0].viewport.width, 900);
     assert.equal(result.manifest.cases[0].viewport.height, 700);
     assert.equal(result.manifest.cases[0].scrollY, 0);
-    assert.ok(fs.existsSync(path.join(result.runDir, 'screenshots', 'TC-002-1-second.png')));
+    assert.ok(fs.existsSync(path.join(result.runDir, 'screenshots', 'TC-002.png')));
+    assert.ok(fs.existsSync(path.join(result.runDir, 'screenshots', 'TC-002-2-final.png')));
+    assert.equal(result.manifest.cases[1].file, 'screenshots/TC-002.png');
+    assert.ok(result.manifest.cases[1].extraFiles.includes('screenshots/TC-002-2-final.png'));
     fs.unlinkSync(path.join(result.runDir, 'contact-sheet.png'));
     await makeContactSheet(result.runDir, result.manifest);
     assert.ok(fs.existsSync(path.join(result.runDir, 'contact-sheet.png')));
@@ -205,6 +227,40 @@ test('functional runner captures stable viewport states, popup and partial selec
   } finally {
     delete process.env.UI_EVIDENCE_HEADLESS;
     delete process.env.UI_EVIDENCE_PROFILE;
+    await new Promise(resolve => server.close(resolve));
+  }
+});
+
+test('functional runner waits for business state and records screen, viewport and image separately', { timeout: 20000 }, async () => {
+  const { server, baseUrl } = await startServer();
+  const project = fs.mkdtempSync(path.join(os.tmpdir(), 'functional-state-'));
+  try {
+    const result = await runCapture({
+      config: config(baseUrl, [{
+        id: 'TC-101', startUrl: '/state', stateGroup: 'favorites',
+        steps: [
+          { action: 'waitForText', selector: '#counter', value: '1', exact: true },
+          { action: 'waitForCount', selector: '.card', value: 1 },
+          { action: 'waitForAttribute', selector: '#counter', name: 'data-state', value: 'ready' },
+          { action: 'waitForHidden', selector: '.spinner' },
+          { action: 'assertText', selector: '#counter', value: '1', exact: true },
+          { action: 'assertCount', selector: '.card', value: 1 },
+          { action: 'assertUrl', value: '/state' }
+        ],
+        ready: { selector: '#counter' },
+        capture: { target: '#counter', contextSelector: '#header', scroll: 'top' }
+      }]),
+      projectRoot: project
+    });
+    const captured = result.manifest.cases[0];
+    assert.equal(captured.status, 'captured');
+    assert.deepEqual(captured.viewport, { width: 900, height: 700 });
+    assert.deepEqual(captured.image, { width: 900, height: 700 });
+    assert.equal(captured.captureMode, 'viewport');
+    assert.equal(captured.context.selector, '#header');
+    assert.equal(captured.navigation[0].action, 'startUrl');
+    assert.equal(captured.navigation[0].attempts, 1);
+  } finally {
     await new Promise(resolve => server.close(resolve));
   }
 });
@@ -235,13 +291,18 @@ test('functional runner blocks an effectively blank screenshot', { timeout: 2000
   process.env.UI_EVIDENCE_HEADLESS = '1';
   process.env.UI_EVIDENCE_PROFILE = path.join(project, '.profile');
   try {
+    const configured = config(baseUrl, [{ id: 'TC-006', startUrl: '/blank', steps: [], ready: { selector: 'body' } }]);
+    configured.diagnostics = { trace: 'failures' };
     const result = await runCapture({
-      config: config(baseUrl, [{ id: 'TC-006', startUrl: '/blank', steps: [], ready: { selector: 'body' } }]),
+      config: configured,
       projectRoot: project
     });
     assert.equal(result.manifest.status, 'failed');
     assert.equal(result.manifest.cases[0].status, 'blocked');
+    assert.equal(result.manifest.cases[0].blockType, 'execution');
     assert.match(result.manifest.cases[0].reason, /пуст/i);
+    assert.equal(result.manifest.cases[0].diagnosticTrace, 'traces/TC-006.zip');
+    assert.ok(fs.existsSync(path.join(result.runDir, 'traces', 'TC-006.zip')));
   } finally {
     delete process.env.UI_EVIDENCE_HEADLESS;
     delete process.env.UI_EVIDENCE_PROFILE;

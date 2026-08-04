@@ -1,0 +1,18 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {"driver": {"name": "fixture"}},
+      "results": [
+        {
+          "ruleId": "fixture.rule",
+          "level": "warning",
+          "message": {"text": "Contact qa.person@example.invalid; token=fixture-secret"},
+          "locations": [
+            {"physicalLocation": {"artifactLocation": {"uri": "delivery/example.txt"}}}
+          ]
+        }
+      ]
+    }
+  ]
+}

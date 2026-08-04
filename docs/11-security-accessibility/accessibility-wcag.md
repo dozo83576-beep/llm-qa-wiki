@@ -1,7 +1,7 @@
 ---
 title: "Доступность и WCAG"
 category: "accessibility"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["accessibility", "wcag", "contrast", "keyboard", "screen-reader"]
 source_priority: "official-docs"
@@ -25,7 +25,8 @@ source_priority: "official-docs"
 
 ## Что проверять вручную
 
-Автоматические инструменты ловят меньшей части нарушений. Остальное — руками.
+Автоматические инструменты выявляют только машинно проверяемую часть нарушений. Полное соответствие
+WCAG 2.2 они не доказывают: нужны ручная оценка и прохождение полных пользовательских процессов.
 
 **Клавиатура.** Весь сценарий проходится без мыши:
 
@@ -54,9 +55,26 @@ source_priority: "official-docs"
 **Движение.** Автовоспроизведение можно остановить. Анимация уважает системную настройку уменьшения
 движения.
 
+## Новые A/AA-критерии WCAG 2.2
+
+- **2.4.11 Focus Not Obscured (Minimum), AA:** focused control не полностью закрыт созданным автором
+  sticky-элементом, modal или баннером.
+- **2.5.7 Dragging Movements, AA:** drag-and-drop имеет single-pointer альтернативу без drag, кроме
+  essential drag и поведения user agent.
+- **2.5.8 Target Size (Minimum), AA:** цель не меньше 24×24 CSS px. Для меньшей цели проверяется
+  spacing окружностью 24 CSS px; исключения: equivalent control, inline-текст, размер от user agent,
+  essential или legally required presentation.
+- **3.3.8 Accessible Authentication (Minimum), AA:** вход не требует cognitive function test без
+  альтернативы или механизма помощи; password manager и copy/paste не блокируются.
+
+В A-scope также входят **3.2.6 Consistent Help** и **3.3.7 Redundant Entry**, если применимы к
+проверяемому процессу.
+
 ## Как проверять
 
 - Автоматический аудит — первым проходом, чтобы снять очевидное.
+- Для повторяемых проверок выбирать ACT Rules по WCAG criterion и фиксировать статус правила
+  (`approved` или `proposed`). ACT Rules информативны и сами не определяют conformance.
 - Навигация с клавиатуры — обязательно вручную.
 - Замер контраста инструментом; результат приводится числом: «3.1:1 при требуемых 4.5:1».
 - Проверка со скринридером — по возможности; хотя бы на ключевом сценарии.
@@ -67,6 +85,7 @@ source_priority: "official-docs"
 ## Частые ошибки
 
 - Вывод о доступности по результату автоматического аудита.
+- Считать `0 violations` в axe или успешные ACT Rules доказательством полного соответствия.
 - Оценка контраста на глаз.
 - Пропуск состояний `hover` и `focus` при замере контраста.
 - Альтернативное описание, дублирующее подпись под изображением.
@@ -82,6 +101,7 @@ source_priority: "official-docs"
 
 ## Источники
 
-- [WCAG 2.2](https://www.w3.org/TR/WCAG22/) — проверено 2026-07-30.
-- [W3C: How to Meet WCAG (Quick Reference)](https://www.w3.org/WAI/WCAG22/quickref/) — проверено 2026-07-30.
+- [WCAG 2.2](https://www.w3.org/TR/WCAG22/) — проверено 2026-08-03.
+- [W3C ACT Rules](https://www.w3.org/WAI/standards-guidelines/act/rules/) — проверено 2026-08-03.
+- [axe-core](https://github.com/dequelabs/axe-core) — проверено 2026-08-03.
 - [Чек-лист доступности](../../checklists/accessibility.md)

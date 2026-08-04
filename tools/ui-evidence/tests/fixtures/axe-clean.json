@@ -1,0 +1,7 @@
+{
+  "testEngine": { "name": "axe-core", "version": "4.12.1" },
+  "violations": [],
+  "incomplete": [],
+  "passes": [{ "id": "document-title", "nodes": [] }],
+  "inapplicable": []
+}

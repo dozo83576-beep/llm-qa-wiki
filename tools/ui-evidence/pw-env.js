@@ -218,7 +218,12 @@ async function open({ width = 1366, height = 900, locale = 'ru-RU' } = {}) {
  * Навигация с повторами и ожиданием конца анти-бот проверки.
  * Возвращает { status, attempts, title }. Бросает исключение, если не удалось ни разу.
  */
-async function goto(page, url, { attempts = 6, timeout = 45000 } = {}) {
+async function goto(page, url, {
+  attempts = 6,
+  timeout = 45000,
+  retryDelayMs = 3000,
+  networkIdleTimeoutMs = 5000
+} = {}) {
   let lastErr = null;
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
@@ -228,17 +233,34 @@ async function goto(page, url, { attempts = 6, timeout = 45000 } = {}) {
         if (!/Checking|Just a moment|Проверка|Attention Required/i.test(title)) break;
         await page.waitForTimeout(1000);
       }
-      await page.waitForLoadState('networkidle', { timeout }).catch(() => {});
+      if (networkIdleTimeoutMs > 0) {
+        await page.waitForLoadState('networkidle', { timeout: Math.min(timeout, networkIdleTimeoutMs) }).catch(() => {});
+      }
       return { status: resp ? resp.status() : null, attempts: attempt, title: await page.title() };
     } catch (e) {
       lastErr = e;
-      await page.waitForTimeout(3000 * attempt);
+      if (attempt < attempts && retryDelayMs > 0) await page.waitForTimeout(retryDelayMs * attempt);
     }
   }
   throw new Error('Навигация не удалась за ' + attempts + ' попыток: ' + lastErr.message.split('\n')[0]);
 }
 
+function liveSmokePrerequisites({
+  requirePlaywrightFn = requirePlaywright,
+  findBrowserFn = findBrowser
+} = {}) {
+  try {
+    requirePlaywrightFn();
+  } catch (error) {
+    return { available: false, reason: 'playwright', detail: error.message.split('\n')[0] };
+  }
+  const browser = findBrowserFn();
+  if (!browser) return { available: false, reason: 'browser', detail: 'Chromium/Chrome executable not found' };
+  return { available: true, reason: null, browser };
+}
+
 module.exports = {
   open, goto, preflight, findBrowser, profileDir, DEFAULT_UA, requirePlaywright,
-  openFunctional, maximizeWindow, browserMetrics, functionalLaunchOptions, resolveFunctionalProfile
+  openFunctional, maximizeWindow, browserMetrics, functionalLaunchOptions, resolveFunctionalProfile,
+  liveSmokePrerequisites
 };

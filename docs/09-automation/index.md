@@ -1,7 +1,7 @@
 ---
 title: "Автоматизация"
 category: "automation"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["automation", "index", "playwright", "ci"]
 source_priority: "internal"
@@ -18,6 +18,10 @@ source_priority: "internal"
 - [Локаторы и page object](locators-and-page-objects.md) — как сделать тесты устойчивыми.
 - [Флаки-тесты](flaky-tests.md) — почему тест падает через раз и что с этим делать.
 - [Сбор доказательств](evidence-collection.md) — автоматизация как источник фактов для баг-репортов.
+- [Статические проверки и эффективность тестов](static-and-test-effectiveness.md) — static,
+  property-based и mutation testing при доступном коде.
+- [Тестирование с опорой на observability](observability-assisted-testing.md) — синтетические
+  `qa.run_id` и `trace_id` без ПДн в baggage.
 
 ## Автоматизация на разовом заказе
 

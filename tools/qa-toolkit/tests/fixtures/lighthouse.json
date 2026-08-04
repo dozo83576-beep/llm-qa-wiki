@@ -1,0 +1,14 @@
+{
+  "lighthouseVersion": "12.0.0",
+  "finalUrl": "https://example.invalid/page?api_key=fixture-secret",
+  "categories": {
+    "performance": {"score": 0.72},
+    "accessibility": {"score": 1}
+  },
+  "audits": {
+    "errors-in-console": {"score": 0, "title": "Browser errors logged"}
+  },
+  "budgetSignals": [
+    {"overBudget": true, "message": "Script budget exceeded"}
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "url": "https://example.invalid/?token=fixture-secret",
+  "violations": [
+    {
+      "id": "image-alt",
+      "impact": "critical",
+      "help": "Images must have alternate text",
+      "nodes": [{"target": ["img.hero"]}]
+    }
+  ],
+  "incomplete": [
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "help": "Contrast needs manual confirmation",
+      "nodes": [{"target": [".muted"]}]
+    }
+  ]
+}

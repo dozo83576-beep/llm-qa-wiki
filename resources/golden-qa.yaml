@@ -89,3 +89,33 @@ questions:
     question: когда писать тест-кейс а когда достаточно чек-листа
     expected_paths:
       - docs/04-documentation/checklist-vs-test-case.md
+
+  - id: api-breaking-contract
+    question: как найти breaking changes между двумя openapi спецификациями
+    expected_paths:
+      - docs/08-api-testing/contract-and-schema.md
+
+  - id: service-virtualization
+    question: как заменить нестабильный внешний api и поднять тестовую базу в контейнере
+    expected_paths:
+      - docs/08-api-testing/service-virtualization.md
+
+  - id: mutation-effectiveness
+    question: как проверить что unit тесты замечают изменение логики mutation testing
+    expected_paths:
+      - docs/09-automation/static-and-test-effectiveness.md
+
+  - id: mobile-assistive
+    question: как проверить мобильное приложение с talkback voiceover и switch access
+    expected_paths:
+      - docs/07-mobile-testing/mobile-automation-and-accessibility.md
+
+  - id: qa-trace-correlation
+    question: как связать автотест с trace id и не положить персональные данные в baggage
+    expected_paths:
+      - docs/09-automation/observability-assisted-testing.md
+
+  - id: visual-regression-baseline
+    question: как проверить visual regression pixel diff и безопасно утвердить новый baseline
+    expected_paths:
+      - patterns/ui/visual-regression-baseline-review.md

@@ -1,7 +1,7 @@
 ---
 title: "Мобильное приложение"
 category: "checklist"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["checklist", "mobile", "ios", "android", "release"]
 source_priority: "internal"
@@ -72,6 +72,15 @@ source_priority: "internal"
 - [ ] **WebView** отображается корректно, ссылки работают — QA — warn.
 - [ ] **Шаринг контента** работает — QA — warn.
 - [ ] **Реклама** не перекрывает функциональность — QA — warn.
+
+## Автоматизация и доступность
+
+- [ ] **Критичный smoke-flow автоматизирован** Appium или Maestro с accessibility id/видимым именем, без координат — QA — warn — [Практика](../docs/07-mobile-testing/mobile-automation-and-accessibility.md).
+- [ ] **Android flow пройден с TalkBack**: имя, роль, состояние и focus order корректны — QA — block.
+- [ ] **Android flow достижим через Switch Access** без обязательного сложного жеста — QA — block.
+- [ ] **iOS flow пройден с VoiceOver**: labels, focus и возврат после modal/navigation корректны — QA — block.
+- [ ] **iOS flow достижим через Switch Control** — QA — block.
+- [ ] **Окружение указано честно**: устройство, ОС, build и assistive technology; iOS automation выполнена на macOS/Xcode — QA — block.
 
 ## Прочее
 

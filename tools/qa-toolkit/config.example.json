@@ -1,0 +1,6 @@
+{
+  "target": "https://example.invalid/health",
+  "runs": 3,
+  "budget_file": "budget.json",
+  "timeout_seconds": 180
+}

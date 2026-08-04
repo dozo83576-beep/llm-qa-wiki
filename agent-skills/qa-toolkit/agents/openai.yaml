@@ -1,0 +1,7 @@
+interface:
+  display_name: "QA Toolkit"
+  short_description: "Безопасный запуск локальных OSS QA-профилей"
+  default_prompt: "Use $qa-toolkit to preflight and run one authorized local OSS QA profile, record result.json, and leave all findings for human interpretation."
+
+policy:
+  allow_implicit_invocation: false

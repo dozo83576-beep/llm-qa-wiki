@@ -1,0 +1,10 @@
+{
+  "breakingChanges": [
+    {
+      "id": "api-path-removed",
+      "level": "error",
+      "text": "API path deleted",
+      "path": "/v1/example"
+    }
+  ]
+}

@@ -303,6 +303,7 @@ $generatedMarkdownReports = @(
 $markdownFiles = Get-ChildItem -LiteralPath $rootPath -Recurse -File |
     Where-Object {
         $_.Extension -in @(".md", ".mdx") -and
+        $_.FullName -notmatch "[\\/]node_modules[\\/]" -and
         $generatedMarkdownReports -notcontains ($_.FullName.Substring($rootPath.Path.Length + 1) -replace "\\", "/")
     }
 

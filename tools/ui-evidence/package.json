@@ -1,0 +1,9 @@
+{
+  "name": "qa-ui-evidence-local-dependencies",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Project-local dependencies for the optional UI evidence checks.",
+  "dependencies": {
+    "axe-core": "4.12.1"
+  }
+}

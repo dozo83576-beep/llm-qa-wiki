@@ -1,7 +1,7 @@
 ---
 title: "QA API"
 category: "playbook"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["playbook", "api", "rest", "contract"]
 source_priority: "mixed"
@@ -37,6 +37,10 @@ source_priority: "mixed"
 структура ответа. Фиксируется эталон структуры, если спецификации нет. См.
 [контракт и схема](../08-api-testing/contract-and-schema.md).
 
+До automation зафиксировать safety budget: test environment, разрешённые методы/endpoints, rate,
+workers, synthetic data, cleanup и stop conditions. На production генеративные и изменяющие прогоны
+не запускать.
+
 **4. Коды ответов.** Штатные и ошибочные сценарии. Проверить, что валидация даёт 4xx, а не 500; что
 несуществующий объект даёт 404; что неподдерживаемый метод даёт 405. См.
 [коды ответов](../08-api-testing/http-and-status-codes.md).
@@ -58,7 +62,12 @@ source_priority: "mixed"
 **9. Утечки.** Тела ошибок без трассировки и внутренних путей. Чувствительные данные не в параметрах
 URL.
 
-**10. Отчёт.** Сборка XLSX. В шагах кейсов указываются метод, адрес и тело запроса — это делает их
+**10. Advanced contract checks.** Schemathesis — ограниченный schema-driven прогон; oasdiff —
+baseline/candidate breaking diff; Pact — consumer/provider verification. Недоступные зависимости
+заменять WireMock, а БД/брокеры — одноразовыми Testcontainers; затем обязателен разрешённый прогон с
+реальной test dependency. См. [виртуализацию](../08-api-testing/service-virtualization.md).
+
+**11. Отчёт.** Сборка XLSX. В шагах кейсов указываются метод, адрес и тело запроса — это делает их
 воспроизводимыми.
 
 ## Частые ошибки
@@ -82,3 +91,4 @@ URL.
 - [Тестирование API](../08-api-testing/index.md)
 - [OWASP API Security Top 10](https://owasp.org/www-project-api-security/) — проверено 2026-07-30.
 - [Playwright](../09-automation/playwright.md)
+- [Schemathesis](https://github.com/schemathesis/schemathesis), [oasdiff](https://github.com/oasdiff/oasdiff), [Pact](https://docs.pact.io/) — проверено 2026-08-03.

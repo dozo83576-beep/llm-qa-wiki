@@ -115,6 +115,49 @@ try {
         & python tools/test-qa-report.py
     }
 
+    Invoke-Step "QA toolkit self-test" {
+        & python -m unittest discover -s tools/qa-toolkit/tests -p "test_*.py"
+    }
+
+    Invoke-Step "UI accessibility helper self-test" {
+        & node --test tools/ui-evidence/test-axe-accessibility.js
+    }
+
+    Invoke-Step "UI functional core backward compatibility" {
+        & node --test tools/ui-evidence/test-functional-screenshots.js
+    }
+
+    Invoke-Step "UI functional optional live smoke" {
+        & node -e "const result=require('./tools/ui-evidence/pw-env').liveSmokePrerequisites(); process.exit(result.available ? 0 : result.reason === 'browser' ? 2 : 1)" 2>$null
+        $prerequisiteStatus = $LASTEXITCODE
+        if ($prerequisiteStatus -eq 0) {
+            & node --test tools/ui-evidence/test-functional-runner.js
+        }
+        else {
+            if ($prerequisiteStatus -eq 2) {
+                Write-Host "SKIPPED optional live smoke: Browser unavailable"
+            }
+            else {
+                Write-Host "SKIPPED optional live smoke: Playwright unavailable"
+            }
+            $global:LASTEXITCODE = 0
+        }
+    }
+
+    Invoke-Step "Agent Skills validator self-test" {
+        & python tools/test_validate_agent_skills.py
+    }
+
+    Invoke-Step "Deterministic skill evals" {
+        & python tools/test_validate_skill_evals.py
+        if ($LASTEXITCODE -eq 0) {
+            & python tools/validate_skill_evals.py
+        }
+        if ($LASTEXITCODE -eq 0) {
+            & python tools/validate_skill_evals.py --results agent-skills/evals/results.fixture.json --partial-results
+        }
+    }
+
     Invoke-Step "Verify agent skills" {
         & ./tools/verify-agent-skills.ps1
     }

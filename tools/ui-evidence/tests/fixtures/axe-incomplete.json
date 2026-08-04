@@ -1,0 +1,17 @@
+{
+  "testEngine": { "name": "axe-core", "version": "4.12.1" },
+  "violations": [],
+  "incomplete": [
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "tags": ["wcag2aa", "wcag143"],
+      "description": "Ensure foreground and background colors have sufficient contrast",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/color-contrast",
+      "nodes": [{ "impact": "serious", "target": [".label"], "html": "<span class=\"label\">Text</span>", "failureSummary": "Review contrast manually" }]
+    }
+  ],
+  "passes": [],
+  "inapplicable": []
+}

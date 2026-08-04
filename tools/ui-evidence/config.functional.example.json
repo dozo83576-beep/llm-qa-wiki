@@ -19,6 +19,7 @@
     "stableIntervalMs": 500,
     "stableTimeoutMs": 12000,
     "maxDiffRatio": 0.001,
+    "contextSelector": "header",
     "collapseEmptyAds": [
       { "container": ".header-ann", "slot": ":scope > .ad-slot", "optional": true }
     ]
@@ -31,6 +32,22 @@
     "forbiddenTitle": "(Checking|Just a moment|Attention Required|Проверка)",
     "forbiddenText": "(404|Page not found|Страница не найдена)"
   },
+  "navigation": {
+    "attempts": 3,
+    "timeoutMs": 45000,
+    "retryDelayMs": 1000,
+    "networkIdleTimeoutMs": 3000
+  },
+  "diagnostics": { "trace": "off" },
+  "checks": {
+    "accessibility": {
+      "enabled": true,
+      "tags": ["wcag2a", "wcag2aa"],
+      "rules": { "color-contrast": true },
+      "include": ["main"],
+      "exclude": [".third-party-widget"]
+    }
+  },
   "cases": [
     {
       "id": "TC-001",
@@ -38,7 +55,14 @@
       "startUrl": "/",
       "steps": [],
       "ready": { "selector": "header" },
-      "capture": { "target": "header", "scroll": "top" }
+      "capture": {
+        "target": "header", "scroll": "top",
+        "proof": {
+          "title": "TC-001 · Главная страница открыта",
+          "note": "Результат: шапка и первый экран видны без перекрытия.",
+          "position": "bottom-right", "highlights": ["header"]
+        }
+      }
     },
     {
       "id": "TC-002",
@@ -49,10 +73,24 @@
         { "action": "select", "selector": "select[name='year']", "value": "2020" },
         { "action": "click", "selector": "button[type='submit']" },
         { "action": "waitForUrl", "value": "/results/" },
-        { "action": "waitForSelector", "selector": ".result-card", "captureAfter": "results", "captureReady": ".result-card", "captureTarget": ".result-card" }
+        { "action": "waitForCount", "selector": ".result-card", "value": 10 },
+        { "action": "waitForText", "selector": "h1", "value": "Результаты" },
+        {
+          "action": "waitForSelector", "selector": ".result-card", "captureAfter": "results",
+          "captureReady": ".result-card", "captureTarget": ".result-card",
+          "captureProof": {
+            "title": "TC-002 · Результаты поиска появились",
+            "note": "Результат отправки формы: первая карточка видима.",
+            "position": "bottom-right", "highlights": [".result-card"]
+          }
+        }
       ],
+      "primaryCaptureAfter": "results",
       "ready": { "selector": ".result-card" },
-      "capture": { "target": ".result-card", "scroll": "anchor" }
+      "capture": {
+        "target": ".result-card", "scroll": "anchor",
+        "proof": { "title": "TC-002 · Финальное состояние поиска", "highlights": [".result-card"] }
+      }
     },
     {
       "id": "TC-003",
@@ -63,7 +101,14 @@
         { "action": "click", "selector": "a.oauth", "expectPage": "oauth" }
       ],
       "ready": { "page": "oauth", "selector": "body", "allowedOrigins": ["https://accounts.example.test"] },
-      "capture": { "page": "oauth", "scroll": "top" }
+      "capture": {
+        "page": "oauth", "scroll": "top", "contextSelector": false,
+        "proof": {
+          "title": "TC-003 · Окно OAuth открыто",
+          "note": "Результат: активна страница разрешённого внешнего origin.",
+          "position": "bottom-right"
+        }
+      }
     }
   ]
 }

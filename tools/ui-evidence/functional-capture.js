@@ -4,7 +4,8 @@ const path = require('node:path');
 const readline = require('node:readline');
 
 const { normalizeConfig, pngDimensions, validateRun, promoteRun } = require('./functional-core');
-const { openFunctional, maximizeWindow, requirePlaywright, findBrowser } = require('./pw-env');
+const { openFunctional, maximizeWindow, requirePlaywright, findBrowser, goto: gotoWithRetry } = require('./pw-env');
+const { AXE_ERROR_PREFIX, preflightAccessibility, resolveLocalAxe, runAxe } = require('./axe-accessibility');
 
 function runId(now = new Date()) {
   const stamp = now.toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
@@ -246,6 +247,151 @@ async function collapseDeclaredEmptyAds(page, rules) {
   return result.filter(item => !item.skipped);
 }
 
+async function installProofOverlay(page, proof) {
+  if (!proof) return null;
+  return page.evaluate(spec => {
+    const rootId = '__ui_evidence_proof_overlay__';
+    document.getElementById(rootId)?.remove();
+    document.querySelectorAll('[data-ui-evidence-proof-highlight]').forEach(element => element.remove());
+
+    const visibleState = element => {
+      if (!element) return { found: false, visible: false };
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const visible = rect.width > 0 && rect.height > 0 && style.display !== 'none' &&
+        style.visibility !== 'hidden' && Number(style.opacity) !== 0;
+      const onScreen = visible && rect.bottom > 0 && rect.right > 0 && rect.top < innerHeight && rect.left < innerWidth;
+      return { element, rect, style, found: true, visible, onScreen };
+    };
+    const metricLines = [];
+    const metricValues = [];
+    for (const metric of spec.metrics || []) {
+      const label = metric.label || metric.type;
+      if (metric.type === 'page-overflow') {
+        const scrollWidth = document.documentElement.scrollWidth;
+        const viewportWidth = innerWidth;
+        const value = { type: metric.type, label, scrollWidth, viewportWidth, overflowPx: scrollWidth - viewportWidth, scrollX };
+        metricValues.push(value);
+        metricLines.push(`${label}: document ${scrollWidth}px / viewport ${viewportWidth}px; overflow ${value.overflowPx}px; scrollX ${Math.round(scrollX)}px`);
+      } else if (metric.type === 'image-health') {
+        const images = [...document.images];
+        const onScreen = images.filter(image => visibleState(image).onScreen);
+        const brokenOnScreen = onScreen.filter(image => !image.complete || image.naturalWidth === 0);
+        const deferredOffScreen = images.filter(image => {
+          const state = visibleState(image);
+          return !state.onScreen && (!image.complete || image.naturalWidth === 0);
+        });
+        const value = {
+          type: metric.type, label, total: images.length, visible: onScreen.length,
+          broken: brokenOnScreen.length, deferredOffScreen: deferredOffScreen.length
+        };
+        metricValues.push(value);
+        metricLines.push(`${label}: всего ${value.total}; на экране ${value.visible}; битых на экране ${value.broken}; отложено вне экрана ${value.deferredOffScreen}`);
+      } else if (metric.type === 'navigation-timing') {
+        const navigation = performance.getEntriesByType('navigation')[0];
+        const value = {
+          type: metric.type, label,
+          domContentLoadedMs: Math.round(navigation?.domContentLoadedEventEnd || 0),
+          loadMs: Math.round(navigation?.loadEventEnd || 0)
+        };
+        metricValues.push(value);
+        metricLines.push(`${label}: DOMContentLoaded ${value.domContentLoadedMs}ms; load ${value.loadMs}ms`);
+      } else if (metric.type === 'element-box') {
+        const state = visibleState(document.querySelector(metric.selector));
+        const value = state.found ? {
+          type: metric.type, label, selector: metric.selector, visible: state.visible,
+          onScreen: state.onScreen,
+          x: Math.round(state.rect.x), y: Math.round(state.rect.y),
+          width: Math.round(state.rect.width), height: Math.round(state.rect.height)
+        } : { type: metric.type, label, selector: metric.selector, visible: false, found: false };
+        metricValues.push(value);
+        metricLines.push(state.found
+          ? `${label}: ${value.width}×${value.height}px; on-screen ${value.onScreen ? 'yes' : 'no'}`
+          : `${label}: element not found`);
+      } else if (metric.type === 'element-state') {
+        const state = visibleState(document.querySelector(metric.selector));
+        const transform = state.found && state.style.transform !== 'none' ? state.style.transform.slice(0, 72) : 'none';
+        const value = state.found ? {
+          type: metric.type, label, selector: metric.selector, visible: state.visible,
+          onScreen: state.onScreen,
+          display: state.style.display, visibility: state.style.visibility, opacity: state.style.opacity,
+          ariaExpanded: state.element.getAttribute('aria-expanded'), transform
+        } : { type: metric.type, label, selector: metric.selector, visible: false, found: false };
+        metricValues.push(value);
+        metricLines.push(state.found
+          ? `${label}: on-screen ${value.onScreen ? 'yes' : 'no'}; display ${value.display}; opacity ${value.opacity}; transform ${value.transform}`
+          : `${label}: element not found`);
+      }
+    }
+
+    const highlights = [];
+    for (const selector of spec.highlights || []) {
+      const state = visibleState(document.querySelector(selector));
+      if (!state.found || !state.onScreen) {
+        highlights.push({ selector, visible: false });
+        continue;
+      }
+      const frame = document.createElement('div');
+      frame.dataset.uiEvidenceProofHighlight = 'true';
+      Object.assign(frame.style, {
+        position: 'fixed', pointerEvents: 'none', zIndex: '2147483646',
+        left: `${Math.max(0, state.rect.left - 3)}px`, top: `${Math.max(0, state.rect.top - 3)}px`,
+        width: `${Math.max(0, Math.min(innerWidth, state.rect.right) - Math.max(0, state.rect.left) + 6)}px`,
+        height: `${Math.max(0, Math.min(innerHeight, state.rect.bottom) - Math.max(0, state.rect.top) + 6)}px`,
+        border: '3px solid #ffbf00', borderRadius: '4px', boxSizing: 'border-box',
+        boxShadow: '0 0 0 1px rgba(0,0,0,.75)'
+      });
+      document.body.appendChild(frame);
+      highlights.push({ selector, visible: true, rect: {
+        x: Math.round(state.rect.x), y: Math.round(state.rect.y),
+        width: Math.round(state.rect.width), height: Math.round(state.rect.height)
+      } });
+    }
+
+    const root = document.createElement('section');
+    root.id = rootId;
+    root.setAttribute('aria-hidden', 'true');
+    const position = spec.position || 'bottom-right';
+    const positionStyle = position.includes('top') ? { top: '12px' } : { bottom: '12px' };
+    Object.assign(positionStyle, position.includes('left') ? { left: '12px' } : { right: '12px' });
+    Object.assign(root.style, {
+      position: 'fixed', zIndex: '2147483647', pointerEvents: 'none',
+      maxWidth: 'min(520px, calc(100vw - 24px))', boxSizing: 'border-box',
+      padding: '10px 12px', borderRadius: '7px', border: '1px solid rgba(255,255,255,.8)',
+      background: 'rgba(9,18,28,.90)', color: '#fff', boxShadow: '0 3px 14px rgba(0,0,0,.35)',
+      fontFamily: 'Arial, sans-serif', fontSize: innerWidth <= 480 ? '11px' : '12px', lineHeight: '1.35',
+      whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', ...positionStyle
+    });
+    const title = document.createElement('strong');
+    title.textContent = spec.title;
+    title.style.display = 'block';
+    title.style.fontSize = innerWidth <= 480 ? '12px' : '13px';
+    title.style.marginBottom = spec.note || metricLines.length ? '4px' : '0';
+    root.appendChild(title);
+    if (spec.note) {
+      const note = document.createElement('div');
+      note.textContent = spec.note;
+      note.style.color = '#fff1ad';
+      note.style.marginBottom = metricLines.length ? '4px' : '0';
+      root.appendChild(note);
+    }
+    if (metricLines.length) {
+      const metrics = document.createElement('div');
+      metrics.textContent = metricLines.join('\n');
+      root.appendChild(metrics);
+    }
+    document.body.appendChild(root);
+    return { title: spec.title, note: spec.note || null, position, metrics: metricValues, highlights };
+  }, proof);
+}
+
+async function removeProofOverlay(page) {
+  await page.evaluate(() => {
+    document.getElementById('__ui_evidence_proof_overlay__')?.remove();
+    document.querySelectorAll('[data-ui-evidence-proof-highlight]').forEach(element => element.remove());
+  }).catch(() => {});
+}
+
 async function prepareForCapture(page, testCase, config) {
   const ready = testCase.ready;
   const timeout = config.readiness.timeoutMs;
@@ -291,7 +437,11 @@ async function prepareForCapture(page, testCase, config) {
       requestAnimationFrame(() => requestAnimationFrame(() => resolve(element.getBoundingClientRect().top)));
     }));
   }
-  return { target: await targetState(page, capture.target), collapsedEmptyAds };
+  return {
+    target: await targetState(page, capture.target),
+    context: await targetState(page, capture.contextSelector),
+    collapsedEmptyAds
+  };
 }
 
 async function stableScreenshot(page, testCase, file) {
@@ -320,6 +470,38 @@ function locatorFor(page, step) {
   return page.locator(step.selector).first();
 }
 
+async function waitForCondition(check, timeout, description) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() <= deadline) {
+    if (await check()) return;
+    await delay(Math.min(100, Math.max(0, deadline - Date.now())));
+  }
+  throw new Error(`${description} не выполнено за ${timeout} мс`);
+}
+
+function urlMatches(url, step, baseUrl) {
+  if (step.regex) return new RegExp(step.value).test(url.href);
+  if (step.exact) return url.href === absoluteUrl(step.value, baseUrl);
+  return url.href.includes(step.value);
+}
+
+function navigationOptions(config, timeout) {
+  return {
+    attempts: config.navigation.attempts,
+    timeout: Math.min(timeout, config.navigation.timeoutMs),
+    retryDelayMs: config.navigation.retryDelayMs,
+    networkIdleTimeoutMs: config.navigation.networkIdleTimeoutMs
+  };
+}
+
+function recordNavigation(state, action, url, result) {
+  if (!state.caseNavigation) return;
+  state.caseNavigation.push({
+    action, url: sanitizeManifestUrl(url), status: result.status,
+    attempts: result.attempts, title: result.title
+  });
+}
+
 async function performStep(state, step, config) {
   const page = state.pages[step.page || state.activePage || 'main'];
   if (!page) throw new Error(`страница «${step.page}» не найдена`);
@@ -327,7 +509,11 @@ async function performStep(state, step, config) {
   try {
     switch (step.action) {
       case 'goto':
-        await page.goto(absoluteUrl(step.url || step.value, config.baseUrl), { waitUntil: 'domcontentloaded', timeout });
+        {
+          const url = absoluteUrl(step.url || step.value, config.baseUrl);
+          const result = await gotoWithRetry(page, url, navigationOptions(config, timeout));
+          recordNavigation(state, 'goto', url, result);
+        }
         break;
       case 'click': {
         const locator = locatorFor(page, step);
@@ -345,6 +531,9 @@ async function performStep(state, step, config) {
         }
         break;
       }
+      case 'clickAt':
+        await page.mouse.click(step.x, step.y);
+        break;
       case 'fill': await locatorFor(page, step).fill(String(step.value ?? ''), { timeout }); break;
       case 'select': {
         const value = step.label !== undefined ? { label: String(step.label) } : String(step.value ?? '');
@@ -357,13 +546,37 @@ async function performStep(state, step, config) {
       case 'back': await page.goBack({ waitUntil: 'domcontentloaded', timeout }); break;
       case 'reload': await page.reload({ waitUntil: 'domcontentloaded', timeout }); break;
       case 'waitForUrl':
-        await page.waitForURL(url => {
-          if (step.regex) return new RegExp(step.value).test(url.href);
-          if (step.exact) return url.href === absoluteUrl(step.value, config.baseUrl);
-          return url.href.includes(step.value);
-        }, { timeout });
+      case 'assertUrl':
+        await page.waitForURL(url => urlMatches(url, step, config.baseUrl), { timeout });
         break;
       case 'waitForSelector': await locatorFor(page, step).waitFor({ state: step.state || 'visible', timeout }); break;
+      case 'waitForHidden':
+        await waitForCondition(async () => {
+          const locator = page.locator(step.selector);
+          return await locator.count() === 0 || !(await locator.first().isVisible().catch(() => false));
+        }, timeout, `${step.selector}: элемент должен исчезнуть`);
+        break;
+      case 'waitForText':
+      case 'assertText':
+        await waitForCondition(async () => {
+          const text = await locatorFor(page, step).innerText().catch(() => '');
+          return step.exact ? text.trim() === step.value : text.includes(step.value);
+        }, timeout, `${step.selector}: ожидаемый текст`);
+        break;
+      case 'waitForCount':
+      case 'assertCount':
+        await waitForCondition(
+          async () => await page.locator(step.selector).count() === step.value,
+          timeout,
+          `${step.selector}: ожидаемое количество ${step.value}`
+        );
+        break;
+      case 'waitForAttribute':
+        await waitForCondition(async () => {
+          const value = await locatorFor(page, step).getAttribute(step.name).catch(() => null);
+          return step.regex ? new RegExp(step.value).test(value || '') : value === step.value;
+        }, timeout, `${step.selector}: атрибут ${step.name}`);
+        break;
       default: throw new Error(`действие «${step.action}» не поддерживается`);
     }
   } catch (error) {
@@ -379,8 +592,17 @@ async function captureOne(state, testCase, file, config) {
   await normalizePageViewport(page, state.canonicalViewport);
   const prepared = await prepareForCapture(page, testCase, config);
   const target = prepared.target;
+  const context = prepared.context;
   if (target.required && !target.fullyVisible) throw new Error(`целевой элемент ${target.selector} обрезан или перекрыт`);
-  const { buffer, analysis } = await stableScreenshot(page, testCase, file);
+  if (context.required && !context.fullyVisible) throw new Error(`контекстный элемент ${context.selector} обрезан или перекрыт`);
+  const proof = await installProofOverlay(page, testCase.capture.proof);
+  let screenshot;
+  try {
+    screenshot = await stableScreenshot(page, testCase, file);
+  } finally {
+    await removeProofOverlay(page);
+  }
+  const { buffer, analysis } = screenshot;
   if (analysis.whiteRatio > 0.995 && analysis.sampledColors < 8) throw new Error('получен практически пустой снимок');
   const dimensions = pngDimensions(buffer);
   const blankBand = analysis.largestInternalBlankBand || { heightPx: 0, startY: null, endY: null };
@@ -390,12 +612,14 @@ async function captureOne(state, testCase, file, config) {
   const metrics = await pageMetrics(page);
   return {
     file: path.relative(state.runDir, file).replace(/\\/g, '/'),
-    url: sanitizeManifestUrl(page.url()), title: await page.title(), viewport: dimensions,
+    url: sanitizeManifestUrl(page.url()), title: await page.title(),
+    viewport: metrics.viewport, image: dimensions, captureMode: testCase.capture.mode,
     screen: state.screen || metrics.screen, devicePixelRatio: metrics.devicePixelRatio,
     scrollY: metrics.scrollY, documentHeight: metrics.documentHeight,
-    target, whiteRatio: analysis.whiteRatio, largestInternalBlankBand: blankBand,
+    target, context, whiteRatio: analysis.whiteRatio, largestInternalBlankBand: blankBand,
     sha256: crypto.createHash('sha256').update(buffer).digest('hex'),
     capturedAt: new Date().toISOString(),
+    proof,
     redactedSelectors: testCase.capture.redactSelectors || [],
     collapsedEmptyAds: prepared.collapsedEmptyAds
   };
@@ -413,6 +637,12 @@ function attachEvents(page, events) {
   page.on('response', response => {
     if (response.status() >= 400) events.httpErrors.push({ at: new Date().toISOString(), url: sanitizeEventUrl(response.url()), status: response.status() });
   });
+}
+
+function blockedCategory(error) {
+  return /(Навигация не удалась|ERR_|page\.goto|net::|Timeout.*navigation)/i.test(error.message)
+    ? 'environment'
+    : 'execution';
 }
 
 async function makeContactSheet(runDir, manifest) {
@@ -454,6 +684,10 @@ async function runCapture(options) {
     if (unknown.length) throw new Error(`Неизвестные Case ID: ${unknown.join(', ')}.`);
   }
 
+  // Dependency preflight intentionally precedes run directory creation and browser launch.
+  // The runner never installs dependencies and never starts a partial scan without the pinned engine.
+  const accessibilityDependency = preflightAccessibility(selected);
+
   const id = runId(options.now);
   const runDir = path.join(projectRoot, '.evidence-runs', id);
   const shotsDir = path.join(runDir, 'screenshots');
@@ -488,16 +722,38 @@ async function runCapture(options) {
       state.pages = { main: browser.page };
       const extras = [];
       let captureIndex = 0;
+      let primaryFromStep = null;
+      let accessibility = null;
+      const caseNavigation = [];
+      state.caseNavigation = caseNavigation;
+      let traceActive = false;
+      let diagnosticTrace = null;
+      let diagnosticTraceError = null;
+      if (config.diagnostics.trace === 'failures' && browser.context.tracing) {
+        try {
+          await browser.context.tracing.start({ screenshots: true, snapshots: true, sources: false });
+          traceActive = true;
+        } catch (error) {
+          diagnosticTraceError = `Трассировка не запущена: ${error.message.split('\n')[0]}`;
+        }
+      }
       try {
         await browser.page.bringToFront();
-        await browser.page.goto(absoluteUrl(testCase.startUrl, config.baseUrl), {
-          waitUntil: 'domcontentloaded', timeout: config.readiness.timeoutMs
-        });
+        const startUrl = absoluteUrl(testCase.startUrl, config.baseUrl);
+        const startResult = await gotoWithRetry(
+          browser.page,
+          startUrl,
+          navigationOptions(config, config.navigation.timeoutMs)
+        );
+        recordNavigation(state, 'startUrl', startUrl, startResult);
         for (const step of testCase.steps) {
           await performStep(state, step, config);
           if (step.captureAfter) {
             captureIndex++;
-            const extraName = `${testCase.id}-${captureIndex}-${safeLabel(step.captureAfter, 'step')}.png`;
+            const useAsPrimary = testCase.primaryCaptureAfter === step.captureAfter;
+            const extraName = useAsPrimary
+              ? `${testCase.id}.png`
+              : `${testCase.id}-${captureIndex}-${safeLabel(step.captureAfter, 'step')}.png`;
             const extraFile = path.join(shotsDir, extraName);
             const capturePage = step.capturePage
               || (typeof step.expectPage === 'string' ? step.expectPage : null)
@@ -514,18 +770,68 @@ async function runCapture(options) {
               capture: {
                 ...testCase.capture,
                 target: step.captureTarget || null,
-                page: capturePage
+                anchor: step.captureAnchor || null,
+                page: capturePage,
+                proof: step.captureProof === false ? undefined :
+                  (step.captureProof || testCase.capture.proof ? {
+                    ...(testCase.capture.proof || {}),
+                    ...(step.captureProof || {})
+                  } : undefined)
               }
             };
             const extra = await captureOne(state, extraCase, extraFile, config);
-            extras.push(extra.file);
+            if (useAsPrimary) primaryFromStep = extra;
+            else extras.push(extra.file);
           }
         }
-        const finalFile = path.join(shotsDir, `${testCase.id}.png`);
+        if (testCase.checks.accessibility) {
+          const accessibilityPageName = testCase.capture.page || testCase.ready.page || 'main';
+          const accessibilityPage = state.pages[accessibilityPageName];
+          if (!accessibilityPage) throw new Error(`страница «${accessibilityPageName}» для accessibility check не найдена`);
+          await accessibilityPage.bringToFront();
+          accessibility = await runAxe(
+            accessibilityPage,
+            testCase.checks.accessibility,
+            accessibilityDependency,
+            runDir,
+            testCase.id
+          );
+        }
+        const finalFile = path.join(shotsDir, primaryFromStep
+          ? `${testCase.id}-${captureIndex + 1}-final.png`
+          : `${testCase.id}.png`);
         const captured = await captureOne(state, testCase, finalFile, config);
-        results.push({ id: testCase.id, status: 'captured', ...captured, extraFiles: extras });
+        if (primaryFromStep) extras.push(captured.file);
+        results.push({
+          id: testCase.id, status: 'captured', ...(primaryFromStep || captured),
+          extraFiles: extras, navigation: caseNavigation,
+          ...(accessibility ? { accessibility } : {}),
+          ...(diagnosticTraceError ? { diagnosticTraceError } : {})
+        });
       } catch (error) {
-        results.push({ id: testCase.id, status: 'blocked', reason: error.message.split('\n')[0], extraFiles: extras });
+        if (traceActive) {
+          try {
+            const tracesDir = path.join(runDir, 'traces');
+            fs.mkdirSync(tracesDir, { recursive: true });
+            const tracePath = path.join(tracesDir, `${testCase.id}.zip`);
+            await browser.context.tracing.stop({ path: tracePath });
+            traceActive = false;
+            diagnosticTrace = path.relative(runDir, tracePath).replace(/\\/g, '/');
+          } catch (traceError) {
+            traceActive = false;
+            diagnosticTraceError = `Трассировка не сохранена: ${traceError.message.split('\n')[0]}`;
+          }
+        }
+        const accessibilityError = String(error.code || '').startsWith(AXE_ERROR_PREFIX);
+        results.push({
+          id: testCase.id, status: accessibilityError ? 'error' : 'blocked',
+          ...(accessibilityError ? { errorType: 'accessibility-engine' } : { blockType: blockedCategory(error) }),
+          reason: error.message.split('\n')[0], extraFiles: extras, navigation: caseNavigation,
+          ...(diagnosticTrace ? { diagnosticTrace } : {}),
+          ...(diagnosticTraceError ? { diagnosticTraceError } : {})
+        });
+      } finally {
+        if (traceActive) await browser.context.tracing.stop().catch(() => {});
       }
     }
 
@@ -538,7 +844,8 @@ async function runCapture(options) {
       browserMode: browser.info.mode,
       browser: browser.info.browser || null,
       profile: browser.info.profile || null,
-      headless: browser.info.headless
+      headless: browser.info.headless,
+      captureSurface: 'playwright'
     };
     const manifest = {
       schemaVersion: 1,
@@ -546,7 +853,11 @@ async function runCapture(options) {
       runId: id,
       createdAt: new Date().toISOString(),
       status: 'captured',
-      config: { evidencePolicy: config.evidencePolicy, capture: config.capture },
+      config: {
+        evidencePolicy: config.evidencePolicy, capture: config.capture,
+        navigation: config.navigation, diagnostics: config.diagnostics,
+        checks: { accessibility: config.checks.accessibility || null }
+      },
       requestedCaseIds: selected.map(testCase => testCase.id),
       environment,
       cases: results,
@@ -582,7 +893,11 @@ async function prepareProfile(config, projectRoot, options = {}) {
   const normalized = normalizeConfig(config);
   const browser = await openFunctional(normalized, projectRoot);
   try {
-    await browser.page.goto(normalized.baseUrl, { waitUntil: 'domcontentloaded', timeout: normalized.readiness.timeoutMs });
+    await gotoWithRetry(
+      browser.page,
+      normalized.baseUrl,
+      navigationOptions(normalized, normalized.navigation.timeoutMs)
+    );
     const interactive = options.interactive ?? Boolean(process.stdin.isTTY);
     const timeoutMs = options.timeoutMs || normalized.browser.profileTimeoutMs || 300000;
     if (interactive) {
@@ -601,6 +916,7 @@ async function prepareProfile(config, projectRoot, options = {}) {
 
 async function checkEnvironment(options) {
   const config = normalizeConfig(options.config);
+  preflightAccessibility(config.cases);
   const browser = await openFunctional(config, path.resolve(options.projectRoot));
   try {
     const actual = {
@@ -645,6 +961,7 @@ async function main() {
   if (args.approve) {
     const result = promoteRun(args.projectRoot, args.approve);
     console.log(`Одобрено снимков: ${result.promoted.length}`);
+    console.log(`Ревизия доказательств: ${result.revision}`);
     if (result.backupDir) console.log(`Резервная копия: ${result.backupDir}`);
     if (result.warnings.length) console.log(`Предупреждения: ${result.warnings.join(' | ')}`);
     return 0;

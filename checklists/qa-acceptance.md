@@ -1,7 +1,7 @@
 ---
 title: "Приёмка и сдача заказа"
 category: "checklist"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["checklist", "acceptance", "handoff", "sign-off"]
 source_priority: "internal"
@@ -32,6 +32,9 @@ source_priority: "internal"
 - [ ] **Поле `Tester` заполнено именем** того, кто вёл заказ — QA — block.
 - [ ] **Числа в сопроводительном сообщении сходятся с файлом** — QA — block — [Отчёт](../docs/04-documentation/test-summary-report.md).
 - [ ] **Ожидаемые результаты измеримы**, без формулировок «работает корректно» — QA — warn.
+- [ ] **Каждый основной PNG показывает результат своего кейса**; переходы имеют «до/после» или
+      запись, невидимые свойства — измерение, точных дубликатов основных PNG нет — QA — block —
+      [Доказательства](../docs/09-automation/evidence-collection.md).
 
 ## Качество дефектов
 

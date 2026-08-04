@@ -1,0 +1,9 @@
+{
+  "findings": [
+    {
+      "rule_id": "fixture-json",
+      "message": "See https://example.invalid/page?api_key=fixture-secret",
+      "cookie": "fixture-cookie"
+    }
+  ]
+}
