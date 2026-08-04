@@ -1,0 +1,11 @@
+[
+  {
+    "path": "/*",
+    "timings": [
+      {"metric": "interactive", "budget": 5000}
+    ],
+    "resourceSizes": [
+      {"resourceType": "script", "budget": 400}
+    ]
+  }
+]

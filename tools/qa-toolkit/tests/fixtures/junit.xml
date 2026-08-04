@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="safe-fixture" tests="3" failures="1" skipped="1">
+  <testcase classname="sample.Api" name="clean" />
+  <testcase classname="sample.Api" name="leak">
+    <failure message="request by qa.person@example.invalid failed at https://example.invalid/path?token=fixture-secret">fixture failure</failure>
+  </testcase>
+  <testcase classname="sample.Api" name="skipped"><skipped /></testcase>
+</testsuite>

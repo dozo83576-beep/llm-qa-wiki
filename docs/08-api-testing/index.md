@@ -1,7 +1,7 @@
 ---
 title: "Тестирование API"
 category: "api"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["api", "index", "rest", "http"]
 source_priority: "internal"
@@ -16,6 +16,8 @@ source_priority: "internal"
 - [Проверка контракта и схемы](contract-and-schema.md) — структура ответа как оракул.
 - [Негативные и security-проверки API](api-negative-and-security.md) — то, что не проверить через
   интерфейс.
+- [Виртуализация сервисов](service-virtualization.md) — WireMock для управляемых HTTP-ответов и
+  Testcontainers для одноразовых реальных зависимостей.
 
 ## Когда это доступно на заказе
 

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deterministic Agent Skill execution results",
+  "description": "Optional results produced by a separate LLM smoke harness; CI validates scenarios and evaluator self-tests without requiring live LLM execution. observed_action_ids must be complete, and transcript is optionally checked against scenario forbidden_patterns.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "results"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["skill", "scenario_type", "actual_artifacts", "passed_quality_gates", "action_events", "action_log_complete", "transcript", "transcript_sha256"],
+        "properties": {
+          "skill": { "type": "string", "minLength": 1 },
+          "scenario_type": { "enum": ["normal", "missing_prerequisite", "unsafe"] },
+          "actual_artifacts": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "passed_quality_gates": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "action_events": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["id", "evidence", "status"], "properties": { "id": { "type": "string", "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$" }, "evidence": { "type": "string", "minLength": 1 }, "status": { "enum": ["completed", "blocked", "skipped"] } } },
+          "action_log_complete": { "const": true },
+          "transcript": { "type": "string", "minLength": 1, "description": "Execution transcript containing [ACTION:<id>] markers." },
+          "transcript_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    }
+  }
+}

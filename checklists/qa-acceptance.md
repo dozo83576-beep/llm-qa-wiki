@@ -1,7 +1,7 @@
 ---
 title: "Приёмка и сдача заказа"
 category: "checklist"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["checklist", "acceptance", "handoff", "sign-off"]
 source_priority: "internal"
@@ -27,8 +27,14 @@ source_priority: "internal"
 - [ ] **Валидатор отчёта проходит без нарушений** — QA — block — [Спецификация](../docs/14-templates/xlsx-test-management.md).
 - [ ] **Нумерация кейсов сплошная**, прогон покрывает все кейсы — QA — block.
 - [ ] **Каждый Fail связан с существующим дефектом**, у Pass поле пустое — QA — block.
+- [ ] **Перелинковка на месте**: `Case ID` и `Bug ID` на `Test Run`, `Related Case ID` и
+      `Session ID` на `Bug Reports` ведут на свою строку — QA — block.
+- [ ] **Поле `Tester` заполнено именем** того, кто вёл заказ — QA — block.
 - [ ] **Числа в сопроводительном сообщении сходятся с файлом** — QA — block — [Отчёт](../docs/04-documentation/test-summary-report.md).
 - [ ] **Ожидаемые результаты измеримы**, без формулировок «работает корректно» — QA — warn.
+- [ ] **Каждый основной PNG показывает результат своего кейса**; переходы имеют «до/после» или
+      запись, невидимые свойства — измерение, точных дубликатов основных PNG нет — QA — block —
+      [Доказательства](../docs/09-automation/evidence-collection.md).
 
 ## Качество дефектов
 

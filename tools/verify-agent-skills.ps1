@@ -86,6 +86,18 @@ if ($failures.Count -eq 0) {
         Add-Failure $failures "Unfinished marker in $($item.Path):$($item.LineNumber)"
     }
 
+    $localValidator = Join-Path $PSScriptRoot "validate_agent_skills.py"
+    if (-not (Test-Path -LiteralPath $localValidator -PathType Leaf)) {
+        Add-Failure $failures "Mandatory local Agent Skills validator missing: $localValidator"
+    }
+    else {
+        $localValidatorOutput = & python $localValidator --root $source --json
+        if ($LASTEXITCODE -ne 0) {
+            Add-Failure $failures "Mandatory local Agent Skills validation failed."
+            $localValidatorOutput | Write-Host
+        }
+    }
+
     if (Test-Path -LiteralPath $SkillValidator -PathType Leaf) {
         $validatorOutput = & python $SkillValidator --root $source --json
         if ($LASTEXITCODE -ne 0) {
@@ -116,7 +128,7 @@ if ($failures.Count -eq 0) {
         Test-SkillRuntime -SourceRoot $source -TargetRoot (Join-Path $env:USERPROFILE ".claude\skills") -TargetName "Claude Code" -Failures $failures
     }
 
-    # Второй проход: соответствие открытому стандарту Agent Skills (agentskills.io).
+    # Необязательный второй проход внешним валидатором: CI не зависит от user-level установки.
     # Ловит то, чего не видит сравнение хешей: посторонние поля frontmatter, битый YAML,
     # расхождение name с именем каталога — всё, что ломает перенос скилла на Codex/Gemini/Cursor.
     # Пропускается, если валидатор не установлен: uv tool install skills-ref

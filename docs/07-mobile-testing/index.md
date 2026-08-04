@@ -1,7 +1,7 @@
 ---
 title: "Тестирование мобильных приложений"
 category: "mobile"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["mobile", "index", "ios", "android"]
 source_priority: "internal"
@@ -17,6 +17,8 @@ source_priority: "internal"
   восстановление состояния.
 - [Условия устройства](device-conditions.md) — сеть, разрешения, ориентация, темы.
 - [Установка, обновление, стор](install-update-store.md) — переносимость и релизный цикл.
+- [Мобильная автоматизация и доступность](mobile-automation-and-accessibility.md) — Appium/Maestro,
+  TalkBack/VoiceOver и Switch Access/Control с честным ограничением Windows/iOS.
 
 ## Отличия от веба
 

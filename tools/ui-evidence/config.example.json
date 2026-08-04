@@ -1,0 +1,83 @@
+{
+  "_комментарий": "Образец конфига сбора UI-доказательств. Скопировать в каталог проекта как ui-cases.json, заменить url и селекторы. Один id — один кейс из _qa-cases.md.",
+  "url": "https://example.test/",
+  "readySelector": "#header",
+  "viewport": { "width": 1366, "height": 900 },
+  "idlePoint": [680, 760],
+  "waitAfterLoad": 2000,
+  "minShotHeight": 300,
+  "cases": [
+    {
+      "id": "TC-001",
+      "name": "Ховер: логотип",
+      "check": "hover",
+      "selector": ".header-logo a",
+      "settle": 900
+    },
+    {
+      "id": "TC-002",
+      "name": "Ховер: пункт меню «Каталог»",
+      "check": "hover",
+      "selector": "#main-menu a[href='/catalog']"
+    },
+    {
+      "id": "TC-011",
+      "name": "Выпадающий блок пользователя: раскрытие, состав, геометрия, закрытие",
+      "check": "dropdown",
+      "trigger": "a.account-link",
+      "panel": "#accountform",
+      "itemSelector": "input, button, a",
+      "closeButton": ".js-close",
+      "openBy": "auto"
+    },
+    {
+      "id": "TC-014",
+      "name": "Список выбора региона: раскрытие и закрытие",
+      "check": "dropdown",
+      "trigger": "#regions a",
+      "panel": "#regionList",
+      "itemSelector": "a",
+      "closeButton": ".modal-close",
+      "openBy": "click"
+    },
+    {
+      "id": "TC-016",
+      "name": "Удобочитаемость: пункт меню «Каталог»",
+      "check": "readability",
+      "selector": "#main-menu a[href='/catalog']",
+      "hitAreaSelector": "#main-menu a[href='/catalog']"
+    },
+    {
+      "id": "TC-021",
+      "name": "Закрытие клавишей Esc: выпадающий блок пользователя",
+      "check": "esc",
+      "trigger": "a.account-link",
+      "panel": "#accountform",
+      "openBy": "hover"
+    },
+    {
+      "id": "KB-001",
+      "name": "Порядок обхода шапки клавишей Tab",
+      "check": "tab-order",
+      "within": "#header",
+      "maxStops": 15,
+      "expectStops": ["Каталог", "Личный кабинет"]
+    },
+    {
+      "id": "KB-002",
+      "name": "Раскрывается ли блок при получении фокуса",
+      "check": "focus-opens",
+      "trigger": "a.account-link",
+      "panel": "#accountform"
+    },
+    {
+      "id": "KB-003",
+      "name": "Доходит ли фокус до полей формы внутри блока",
+      "check": "tab-inside",
+      "trigger": "a.account-link",
+      "panel": "#accountform",
+      "presses": 10,
+      "expectFocusOn": ["email", "password"]
+    }
+  ]
+}

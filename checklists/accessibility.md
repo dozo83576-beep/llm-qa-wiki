@@ -1,7 +1,7 @@
 ---
 title: "Доступность"
 category: "checklist"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["checklist", "accessibility", "wcag", "keyboard", "contrast"]
 source_priority: "mixed"
@@ -23,10 +23,18 @@ source_priority: "mixed"
 - [ ] **Модальное окно забирает фокус** при открытии и возвращает при закрытии — QA — warn.
 - [ ] **Всё кликабельное мышью доступно с клавиатуры** — QA — block.
 - [ ] **Есть возможность пропустить навигацию** — QA — warn.
+- [ ] **2.4.11 Focus Not Obscured (Minimum), AA** — focused control не полностью закрыт sticky/modal/banner content — QA — block.
+
+## Pointer и аутентификация
+
+- [ ] **2.5.7 Dragging Movements, AA** — drag-and-drop выполняется single pointer без drag, если drag не essential и не задан user agent — QA — block.
+- [ ] **2.5.8 Target Size (Minimum), AA** — цель не меньше 24×24 CSS px либо доказано исключение spacing/equivalent/inline/user-agent/essential/legal — QA — block.
+- [ ] **3.3.8 Accessible Authentication (Minimum), AA** — password manager и copy/paste доступны; cognitive test имеет альтернативу или помощь — QA — block.
 
 ## Контраст и цвет
 
 - [ ] **Обычный текст не менее 4.5:1** — замер инструментом — QA — block.
+- [ ] **Текст поверх картинки или градиента** — контраст замерен по пикселям отрисованной страницы, а не по CSS-декларации — QA — block — [Паттерн](../patterns/ui/pixel-contrast-on-image-background.md).
 - [ ] **Крупный текст и интерактивные элементы не менее 3:1** — QA — block.
 - [ ] **Состояния hover и focus** проверены на контраст отдельно — QA — warn.
 - [ ] **Цвет не единственный носитель смысла** — статус не только красным или зелёным — QA — block.
@@ -55,6 +63,8 @@ source_priority: "mixed"
 ## Проверка инструментами
 
 - [ ] **Автоматический аудит пройден**, нарушения разобраны — QA — warn.
+- [ ] **ACT Rules сопоставлены с критериями WCAG**, статус approved/proposed сохранён — QA — warn.
+- [ ] **Ручная проверка выполнена отдельно** — отсутствие автоматических нарушений не объявляется полным соответствием — QA — block.
 - [ ] **Ключевой сценарий проверен со скринридером** — QA — warn.
 - [ ] **Элементы находятся по роли и доступному имени** — косвенная проверка через автотесты — QA — warn — [Локаторы](../docs/09-automation/locators-and-page-objects.md).
 
@@ -69,6 +79,7 @@ source_priority: "mixed"
 
 ## Источники
 
-- [WCAG 2.2](https://www.w3.org/TR/WCAG22/) — проверено 2026-07-30.
+- [WCAG 2.2](https://www.w3.org/TR/WCAG22/) — проверено 2026-08-03.
+- [W3C ACT Rules](https://www.w3.org/WAI/standards-guidelines/act/rules/) — проверено 2026-08-03.
 - [W3C: How to Meet WCAG](https://www.w3.org/WAI/WCAG22/quickref/) — проверено 2026-07-30.
 - [Доступность и WCAG](../docs/11-security-accessibility/accessibility-wcag.md)

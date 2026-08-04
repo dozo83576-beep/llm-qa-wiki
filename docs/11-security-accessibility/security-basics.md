@@ -1,7 +1,7 @@
 ---
 title: "Безопасность для тестировщика"
 category: "security"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["security", "owasp", "authorization", "permission"]
 source_priority: "mixed"
@@ -26,6 +26,13 @@ source_priority: "mixed"
   договор.
 
 ## Что проверять
+
+OWASP Top 10:2025 — awareness-карта, а не готовый suite: **A01 Broken Access Control, A02 Security
+Misconfiguration, A03 Software Supply Chain Failures, A04 Cryptographic Failures, A05 Injection,
+A06 Insecure Design, A07 Authentication Failures, A08 Software or Data Integrity Failures, A09
+Security Logging and Alerting Failures, A10 Mishandling of Exceptional Conditions**. Проверяемые
+требования брать из OWASP ASVS 5.0.0 и ссылаться с версией, например `v5.0.0-1.2.5`: номера без
+версии могут изменить смысл.
 
 **Разграничение доступа** — самая результативная группа, см.
 [негативные проверки API](../08-api-testing/api-negative-and-security.md):
@@ -55,6 +62,10 @@ source_priority: "mixed"
 
 ## Правила поведения
 
+- До security tooling закрыть permission gate: письменный owner, target/scope, методы, rate, test
+  window, stop conditions, test data и приватный канал эскалации.
+- Passive review допустим только в scope; active scan, fuzzing, brute force, payloads, изменение
+  данных и нагрузка требуют отдельного разрешения. ZAP Automation Framework plan сначала проверяется.
 - Подтверждать факт минимальным действием и останавливаться.
 - Не выгружать чужие данные «для доказательства» — достаточно снимка одного экрана с закрытой
   чувствительной частью.
@@ -79,6 +90,8 @@ source_priority: "mixed"
 
 ## Источники
 
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/) — проверено 2026-07-30.
+- [OWASP Top 10:2025](https://owasp.org/Top10/2025/) — проверено 2026-08-03.
+- [OWASP ASVS 5.0.0](https://github.com/OWASP/ASVS) — versioned identifiers; проверено 2026-08-03.
+- [ZAP Automation Framework](https://www.zaproxy.org/docs/automate/automation-framework/) — проверено 2026-08-03.
 - [OWASP Web Security Testing Guide](https://owasp.org/www-project-web-security-testing-guide/) — проверено 2026-07-30.
 - [Персональные данные](personal-data.md)

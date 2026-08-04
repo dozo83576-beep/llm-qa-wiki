@@ -1,0 +1,13 @@
+{
+  "allowed_origins": [
+    "https://example.invalid"
+  ],
+  "allowed_operations": [
+    "zap-baseline",
+    "schemathesis-unsafe",
+    "wiremock-proxy-record"
+  ],
+  "not_before": "2030-01-01T09:00:00+05:00",
+  "expires": "2030-01-01T10:00:00+05:00",
+  "scope_note": "Учебный пример. Для реального прогона нужен документ владельца с точным origin и окном."
+}

@@ -17,7 +17,9 @@
     pwsh tools/verify-qa-pipeline.ps1 -ProjectRoot D:\Rabota\projects\<проект> -RequirePhase design
 #>
 param(
-    [string]$Root = (Resolve-Path ".").Path,
+    # Корень вики берётся от расположения самого скрипта, а не от текущего каталога:
+    # команда в документации не должна зависеть от того, откуда её запустили.
+    [string]$Root = (Split-Path -Parent $PSScriptRoot),
     [string]$ProjectRoot,
     [string]$RequirePhase
 )
@@ -108,10 +110,22 @@ if (-not (Test-Path -LiteralPath $ProjectRoot -PathType Container)) {
 $projectPath = (Resolve-Path -LiteralPath $ProjectRoot).Path
 Write-Host ""
 Write-Host "Project: $projectPath"
+
+# Заказы, выполненные до появления маршрута, помечаются в _qa-pipeline-status.md строкой
+# «Маршрут: legacy». Артефакты фаз им дописывать нельзя — это была бы реконструкция,
+# выданная за протокол. Но и держать такой проект вечно красным вредно: постоянный красный
+# приучает не смотреть на красное. Пометка оставляет факт видимым, не делая его тревогой.
+$legacyMarker = Join-Path $projectPath "_qa-pipeline-status.md"
+$isLegacy = (Test-Path -LiteralPath $legacyMarker -PathType Leaf) -and
+            ((Get-Content -LiteralPath $legacyMarker -Raw -Encoding UTF8) -match '(?m)^\s*Маршрут:\s*legacy\s*$')
+if ($isLegacy) {
+    Write-Host "Маршрут: legacy — заказ выполнен до введения пайплайна"
+}
 Write-Host ""
 
 $done = [System.Collections.Generic.HashSet[string]]::new()
 $nextPhase = $null
+$outOfOrder = [System.Collections.Generic.List[string]]::new()
 foreach ($phase in $phases) {
     $artifactPath = Join-Path $projectPath $phase.artifact
     $isDone = $false
@@ -123,7 +137,16 @@ foreach ($phase in $phases) {
 
     if ($isDone) {
         [void]$done.Add($phase.id)
-        $state = "done"
+        if ($blockedBy.Count -gt 0) {
+            # Артефакт есть, а зависимости нет: фаза закрыта раньше своих предпосылок.
+            # Молчать об этом нельзя — так отчёт собирается по кейсам, которых никто не
+            # проектировал, и маршрут выглядит пройденным, хотя половины работы не было.
+            $state = "done (раньше зависимостей: $($blockedBy -join ', '))"
+            $outOfOrder.Add("$($phase.id): артефакт $($phase.artifact) есть, но не закрыты $($blockedBy -join ', ')")
+        }
+        else {
+            $state = "done"
+        }
     }
     elseif ($blockedBy.Count -gt 0) {
         $state = "blocked by: $($blockedBy -join ', ')"
@@ -142,6 +165,18 @@ if ($nextPhase) {
 }
 else {
     Write-Host "Все фазы закрыты."
+}
+
+if ($outOfOrder.Count -gt 0) {
+    Write-Host ""
+    Write-Host "Нарушен порядок фаз: $($outOfOrder.Count)"
+    foreach ($item in $outOfOrder) { Write-Host "- $item" }
+    if ($isLegacy) {
+        Write-Host "Проект помечен как legacy — нарушение зафиксировано, но не считается ошибкой."
+    }
+    else {
+        exit 1
+    }
 }
 
 if ($RequirePhase) {

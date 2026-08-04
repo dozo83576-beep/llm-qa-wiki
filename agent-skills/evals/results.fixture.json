@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "results": [
+    {
+      "skill": "qa-intake",
+      "scenario_type": "normal",
+      "actual_artifacts": ["_qa-intake.md"],
+      "passed_quality_gates": ["Раздел «вне скоупа» непуст"],
+      "action_events": [
+        {
+          "id": "artifact.created",
+          "evidence": "_qa-intake.md",
+          "status": "completed"
+        }
+      ],
+      "action_log_complete": true,
+      "transcript": "[ACTION:artifact.created] Created _qa-intake.md after scope review.",
+      "transcript_sha256": "afeaf70773e28f507d531a87c7c697de197b18dd1e4dadddb118ace0e4caff84"
+    }
+  ]
+}

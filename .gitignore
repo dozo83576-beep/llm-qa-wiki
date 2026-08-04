@@ -13,6 +13,7 @@ projects/
 # Рабочие каталоги агентов
 .codex-tmp/
 .agent-skills/
+.qa-tools/
 
 # Системное
 Thumbs.db
@@ -20,3 +21,4 @@ desktop.ini
 __pycache__/
 *.pyc
 .venv/
+node_modules/

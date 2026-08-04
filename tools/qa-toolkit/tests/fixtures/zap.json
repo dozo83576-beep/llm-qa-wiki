@@ -1,0 +1,16 @@
+{
+  "site": [
+    {
+      "@name": "https://example.invalid",
+      "alerts": [
+        {
+          "pluginid": "10020",
+          "riskcode": "1",
+          "riskdesc": "Low",
+          "name": "Missing header",
+          "instances": [{"uri": "https://example.invalid/page?session=fixture-secret", "method": "GET"}]
+        }
+      ]
+    }
+  ]
+}

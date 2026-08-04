@@ -1,7 +1,7 @@
 ---
 title: "Проверка контракта и схемы"
 category: "api"
-updated: "2026-07-30"
+updated: "2026-08-03"
 status: "active"
 tags: ["contract", "schema", "openapi", "json", "compatibility"]
 source_priority: "mixed"
@@ -63,6 +63,13 @@ source_priority: "mixed"
 ## Как проверять
 
 - При наличии OpenAPI — валидация ответа против схемы автоматически, а не глазами.
+- Schemathesis генерирует positive/negative и stateful cases из OpenAPI. Запускать только на
+  разрешённом test environment: ограничить rate, workers, endpoints и исключить destructive
+  операции, если на них нет отдельного разрешения.
+- oasdiff сравнивает baseline и candidate OpenAPI; `breaking` становится release gate, а полный diff
+  прикладывается для review. Обе спецификации должны быть версионированы и актуальны.
+- Pact применять при нескольких consumer/provider: consumer test создаёт конкретные interactions,
+  provider verification подтверждает их. Pact дополняет, а не заменяет полную OpenAPI-схему и E2E.
 - Без спецификации — фиксация фактической структуры ответа как эталона и сравнение с ней при
   регрессе.
 - Сравнение ответов до и после изменения — самый дешёвый способ поймать поломку контракта.
@@ -74,6 +81,7 @@ source_priority: "mixed"
 - Игнорирование типов: `"price": "100"` вместо числа ломает арифметику на клиенте.
 - Пропуск пустых коллекций — частый источник падения клиента.
 - Приёмка ломающего изменения без проверки старых клиентов.
+- Генеративный прогон с изменяющими запросами на production.
 
 ## Проверка
 
@@ -85,5 +93,8 @@ source_priority: "mixed"
 ## Источники
 
 - [OpenAPI Specification](https://swagger.io/specification/) — проверено 2026-07-30.
+- [Schemathesis](https://github.com/schemathesis/schemathesis) — проверено 2026-08-03.
+- [oasdiff](https://github.com/oasdiff/oasdiff) — проверено 2026-08-03.
+- [Pact](https://docs.pact.io/) — проверено 2026-08-03.
 - [HTTP и коды ответов](http-and-status-codes.md)
 - [Тестирование API](index.md)

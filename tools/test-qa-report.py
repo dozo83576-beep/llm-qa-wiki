@@ -16,6 +16,7 @@ import json
 import shutil
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 
 import openpyxl
@@ -64,7 +65,9 @@ def fixture() -> dict:
         "title": "Нет hover-эффекта у элементов шапки",
         "severity": "Minor",
         "priority": "Medium",
-        "link": "https://example.test/evidence/br-001",
+        # Список на весь дефект: генератор обязан разложить его по строкам — каждой
+        # строке её снимок, а общая ссылка достаётся обеим.
+        "link": "https://example.test/evidence/br-001, TC-002.png, TC-004.png",
         "reported": "2026-07-30",
         "rows": [
             {
@@ -135,10 +138,29 @@ def main() -> int:
     try:
         data = fixture()
         source = workdir / "report.xlsx"
-        builder.build_workbook(data).save(source)
+        builder.save_workbook(builder.build_workbook(data), source)
 
         print("Позитивные проверки")
         expect_clean(results, "чистый отчёт проходит валидатор", source, expect_pass=3, expect_fail=2)
+
+        with zipfile.ZipFile(source, "r") as package:
+            xml = "\n".join(
+                package.read(name).decode("utf-8")
+                for name in package.namelist()
+                if name.endswith(".xml")
+            )
+        encoded_non_ascii = []
+        for match in builder.NUMERIC_XML_ENTITY.finditer(xml):
+            codepoint = int(match.group(1), 16) if match.group(1) else int(match.group(2), 10)
+            if codepoint >= 128:
+                encoded_non_ascii.append(match.group(0))
+        if "Шапка: проверка элемента 1" in xml and not encoded_non_ascii:
+            results.ok("кириллица записана обычным UTF-8 для Windows Excel")
+        else:
+            results.bad(
+                "совместимость кириллицы",
+                f"литеральный текст={('Шапка: проверка элемента 1' in xml)}, XML-коды={encoded_non_ascii[:3]}",
+            )
 
         wb = openpyxl.load_workbook(source)
         if wb.sheetnames == ["Data", "Test Cases", "Test Run", "Bug Reports"]:
@@ -158,6 +180,80 @@ def main() -> int:
             results.ok("ссылка на доказательство кликабельна")
         else:
             results.bad("гиперссылка", "не проставлена")
+
+        # Перелинковка идентификаторов. Фикстура: кейсы TC-001…TC-005 в строках 2–6,
+        # провалы на TC-002 и TC-004 (строки прогона 3 и 5), дефект BR-001 объявлен
+        # в строке 2 листа Bug Reports и разложен на TC-002 и TC-004.
+        expected_links = [
+            ("Test Run", 2, 5, "'Test Cases'!A2"),
+            ("Test Run", 6, 5, "'Test Cases'!A6"),
+            ("Test Run", 3, 8, "'Bug Reports'!A2"),
+            ("Test Run", 5, 8, "'Bug Reports'!A2"),
+            ("Bug Reports", 2, 3, "'Test Cases'!A3"),
+            ("Bug Reports", 3, 3, "'Test Cases'!A5"),
+            ("Bug Reports", 2, 4, "'Test Run'!A2"),
+            ("Bug Reports", 3, 4, "'Test Run'!A2"),
+        ]
+        wrong = []
+        for sheet, row, col, want in expected_links:
+            cell = wb[sheet].cell(row=row, column=col)
+            got = cell.hyperlink.location if cell.hyperlink else None
+            if got != want:
+                wrong.append(f"{sheet}!{cell.coordinate}: {got} вместо {want}")
+        if wrong:
+            results.bad("перелинковка идентификаторов", "; ".join(wrong))
+        else:
+            results.ok("перелинковка идентификаторов ведёт на нужные строки")
+
+        run_link_font = wb["Test Run"].cell(row=2, column=5).font
+        if run_link_font.underline == "single":
+            results.ok("ссылка в прогоне читается как ссылка")
+        else:
+            results.bad("стиль ссылки", "оформление тела листа затёрло вид гиперссылки")
+
+        testers = {
+            wb["Test Run"].cell(row=r, column=4).value for r in range(2, 7)
+        }
+        if testers == {"Тестировщик"}:
+            results.ok("поле Tester заполнено во всех строках прогона")
+        else:
+            results.bad("поле Tester", str(testers))
+
+        # Доказательства разложены построчно: в строке про TC-002 не должно быть кадра TC-004.
+        att = {row: wb["Bug Reports"].cell(row=row, column=12).value or "" for row in (2, 3)}
+        if "TC-002.png" in att[2] and "TC-004.png" not in att[2] \
+           and "TC-004.png" in att[3] and "TC-002.png" not in att[3]:
+            results.ok("доказательства разложены по строкам дефекта")
+        else:
+            results.bad("раскладка доказательств", f"строка2={att[2]!r} строка3={att[3]!r}")
+
+        if "br-001" in att[2] and "br-001" in att[3]:
+            results.ok("общая ссылка дефекта досталась обеим строкам")
+        else:
+            results.bad("общая ссылка", f"строка2={att[2]!r} строка3={att[3]!r}")
+
+        # Каталог доказательств: по файлу на каждый кейс фикстуры.
+        ev = workdir / "evidence"
+        ev.mkdir(exist_ok=True)
+        for index in range(1, 6):
+            (ev / f"TC-{index:03d}.png").write_bytes(b"\x89PNG")
+        (ev / "run-journal.json").write_text("{}", encoding="utf-8")
+        (ev / "sub").mkdir(exist_ok=True)
+        (ev / "sub" / "TC-002-2-hover.png").write_bytes(b"\x89PNG")
+        if verifier.verify(source, None, None, evidence=ev):
+            results.bad("каталог доказательств", "полный каталог не прошёл проверку")
+        else:
+            results.ok("каталог доказательств: у каждого кейса свой снимок")
+
+        no_tester = dict(fixture())
+        no_tester.pop("tester")
+        default_path = workdir / "default-tester.xlsx"
+        builder.save_workbook(builder.build_workbook(no_tester), default_path)
+        got_default = openpyxl.load_workbook(default_path)["Test Run"].cell(row=2, column=4).value
+        if got_default == builder.DEFAULT_TESTER:
+            results.ok("без поля tester подставляется имя по умолчанию")
+        else:
+            results.bad("умолчание Tester", f"получено «{got_default}»")
         if wb["Test Cases"].tables and wb["Test Run"].tables:
             results.ok("автофильтры на месте")
         else:
@@ -202,6 +298,124 @@ def main() -> int:
         wb["Test Run"].cell(row=2, column=8).value = "BR-001"
         wb.save(broken)
         expect_failure(results, "Pass связан с багом", broken, "Pass ошибочно связан с багом")
+
+        # 4. Ссылка ведёт не на тот лист. Ровно эта ошибка нашлась в отчёте,
+        #    размеченном вручную: Case ID указывал на служебный лист Data.
+        broken = workdir / "broken-link-target.xlsx"
+        shutil.copy(source, broken)
+        wb = openpyxl.load_workbook(broken)
+        wb["Test Run"].cell(row=3, column=5).hyperlink.location = "'Data'!A3"
+        wb.save(broken)
+        expect_failure(results, "ссылка Case ID ведёт не на тот лист", broken, "ведёт на 'Data'!A3")
+
+        # 5. Ссылки нет вовсе — тоже находка из ручной разметки.
+        broken = workdir / "broken-link-missing.xlsx"
+        shutil.copy(source, broken)
+        wb = openpyxl.load_workbook(broken)
+        wb["Bug Reports"].cell(row=2, column=3).hyperlink = None
+        wb.save(broken)
+        expect_failure(results, "нет ссылки в Related Case ID", broken, "Нет перелинковки")
+
+        # 6. Отчёт без подписи автора
+        broken = workdir / "broken-tester.xlsx"
+        shutil.copy(source, broken)
+        wb = openpyxl.load_workbook(broken)
+        wb["Test Run"].cell(row=2, column=4).value = None
+        wb.save(broken)
+        expect_failure(results, "пустое поле Tester", broken, "не заполнено поле Tester")
+
+        # Сопроводительный отчёт: числа сходятся с книгой, идентификаторы существуют.
+        summary = workdir / "ОТЧЁТ.md"
+        summary.write_text(
+            "## Что проверено\n\nПроверена шапка example.test, 5 кейсов.\n\n"
+            "Итог: 3 Pass, 2 Fail.\n\n"
+            "## Найденные дефекты\n\n"
+            "### BR-001 — Нет hover-эффекта (Severity: Minor)\n\n"
+            "Проявляется на TC-002 и TC-004.\n",
+            encoding="utf-8",
+        )
+        if verifier.verify(source, None, None, summary=summary):
+            results.bad("сопроводительный отчёт", "согласованный текст не прошёл проверку")
+        else:
+            results.ok("сопроводительный отчёт сходится с книгой")
+
+        for name, text_replace, fragment in (
+            ("число Pass в тексте разошлось с книгой", ("3 Pass", "9 Pass"), "не сходится"),
+            ("ссылка на несуществующий дефект в тексте", ("BR-001", "BR-009"), "дефект BR-009"),
+            ("ссылка на несуществующий кейс в тексте", ("TC-002", "TC-099"), "кейс TC-099"),
+        ):
+            broken_summary = workdir / f"summary-{fragment[:8]}.md"
+            broken_summary.write_text(
+                summary.read_text(encoding="utf-8").replace(*text_replace), encoding="utf-8"
+            )
+            found = verifier.verify(source, None, None, summary=broken_summary)
+            if any(fragment in f for f in found):
+                results.ok(name)
+            else:
+                results.bad(name, f"валидатор не заметил, получено: {found}")
+
+        # 7. Доказательство чужого кейса в строке дефекта
+        broken = workdir / "broken-evidence-owner.xlsx"
+        shutil.copy(source, broken)
+        wb = openpyxl.load_workbook(broken)
+        wb["Bug Reports"].cell(row=2, column=12).value = "TC-004.png"
+        wb.save(broken)
+        expect_failure(results, "снимок чужого кейса в строке дефекта", broken, "не того кейса")
+
+        # 8. У кейса нет доказательства
+        missing = ev / "TC-003.png"
+        missing.rename(ev / "_отложено.png")
+        found = verifier.verify(source, None, None, evidence=ev)
+        if any("нет доказательства" in f for f in found):
+            results.ok("кейс без снимка")
+        else:
+            results.bad("кейс без снимка", f"валидатор не заметил, получено: {found}")
+        (ev / "_отложено.png").rename(missing)
+
+        # 9. Снимок несуществующего кейса — опечатка в имени или лишний файл
+        stray = ev / "TC-099.png"
+        stray.write_bytes(b"\x89PNG")
+        found = verifier.verify(source, None, None, evidence=ev)
+        if any("ни одному кейсу" in f for f in found):
+            results.ok("снимок несуществующего кейса")
+        else:
+            results.bad("лишний снимок", f"валидатор не заметил, получено: {found}")
+
+        # 10. Тот же лишний файл под ключом legacy проходить обязан
+        if verifier.verify(source, None, None, legacy=True, evidence=ev):
+            results.bad("legacy и доказательства", "ключ не снял проверку именования")
+        else:
+            results.ok("legacy снимает и проверку доказательств")
+        stray.unlink()
+
+        # Режим legacy: книги, собранные до введения перелинковки и подписи, проверяются
+        # по остальным инвариантам. Проверяем обе стороны ключа — иначе он мог бы просто
+        # глушить проверку целиком.
+        legacy_ok = workdir / "legacy.xlsx"
+        shutil.copy(source, legacy_ok)
+        wb = openpyxl.load_workbook(legacy_ok)
+        for row in range(2, 7):
+            wb["Test Run"].cell(row=row, column=5).hyperlink = None
+            wb["Test Run"].cell(row=row, column=4).value = None
+        for row in range(2, 4):
+            wb["Bug Reports"].cell(row=row, column=3).hyperlink = None
+            wb["Bug Reports"].cell(row=row, column=4).hyperlink = None
+        wb.save(legacy_ok)
+        if verifier.verify(legacy_ok, None, None, legacy=True):
+            results.bad("режим legacy", "старый отчёт не прошёл, хотя ключ это разрешает")
+        else:
+            results.ok("режим legacy пропускает отчёт без ссылок и подписи")
+        expect_failure(results, "тот же отчёт без ключа legacy", legacy_ok, "Нет перелинковки")
+
+        legacy_broken = workdir / "legacy-broken.xlsx"
+        shutil.copy(legacy_ok, legacy_broken)
+        wb = openpyxl.load_workbook(legacy_broken)
+        wb["Test Run"].cell(row=2, column=6).value = "Passed"
+        wb.save(legacy_broken)
+        if verifier.verify(legacy_broken, None, None, legacy=True):
+            results.ok("режим legacy продолжает ловить остальные нарушения")
+        else:
+            results.bad("режим legacy", "заглушил проверку Result, а не только ссылки")
 
         # 4. Fail ссылается на несуществующий дефект
         broken = workdir / "broken-ref.xlsx"
