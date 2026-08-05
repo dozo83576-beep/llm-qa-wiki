@@ -1,6 +1,6 @@
 {
-  "chunk_count": 1007,
-  "corpus_hash": "47a1817cf4dde3ece9da270997b464aec95d77ea17db0c2135e0d05f902561cf",
+  "chunk_count": 1019,
+  "corpus_hash": "d45fa1706b79860c04f8fae97c04db92424dcc7f9db42661052ea19890fdc1d8",
   "embedding_model": null,
   "files_indexed": [
     "bug-taxonomy/data-and-state.md",
@@ -119,6 +119,7 @@
     "patterns/perf/single-user-image-background-load-assessment.md",
     "patterns/process/blocked-target-browser-config.md",
     "patterns/process/disposable-mailbox-full-flow.md",
+    "patterns/process/hidden-mobile-duplicate-blocks.md",
     "patterns/process/negative-form-validation-without-signup.md",
     "patterns/process/report-validator-gate.md",
     "patterns/ui/computed-style-hover-proof.md",
@@ -132,7 +133,7 @@
     "prompts/post-task-learning-review.md",
     "prompts/qa-intake-questions.md"
   ],
-  "generated_at": "2026-08-05T02:40:25Z",
+  "generated_at": "2026-08-05T11:18:25Z",
   "has_vectors": false,
   "retrieval_mode": "offline-text"
 }

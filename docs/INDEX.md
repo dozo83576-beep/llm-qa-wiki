@@ -13,11 +13,11 @@ source_priority: "internal"
 
 ## Сводка
 
-- Всего документов: **132**
-- Активных: **129**
+- Всего документов: **133**
+- Активных: **130**
 - Redirect-stubs: **0**
 - Archived: **0**
-- Суммарный объём: **444625** символов
+- Суммарный объём: **454540** символов
 
 ## docs
 
@@ -59,7 +59,7 @@ source_priority: "internal"
 | [docs/04-documentation/traceability-matrix.md](../docs/04-documentation/traceability-matrix.md) | Матрица трассируемости | documentation | 2994 | 2026-07-30 | active | mixed |
 | [docs/05-defect-management/defect-lifecycle.md](../docs/05-defect-management/defect-lifecycle.md) | Жизненный цикл дефекта | defects | 3133 | 2026-07-30 | active | mixed |
 | [docs/05-defect-management/index.md](../docs/05-defect-management/index.md) | Управление дефектами | defects | 1524 | 2026-07-30 | active | internal |
-| [docs/05-defect-management/reproducibility.md](../docs/05-defect-management/reproducibility.md) | Воспроизводимость дефекта | defects | 2830 | 2026-07-30 | active | internal |
+| [docs/05-defect-management/reproducibility.md](../docs/05-defect-management/reproducibility.md) | Воспроизводимость дефекта | defects | 4232 | 2026-07-30 | active | internal |
 | [docs/05-defect-management/severity-vs-priority.md](../docs/05-defect-management/severity-vs-priority.md) | Severity против priority | defects | 3430 | 2026-07-30 | active | mixed |
 | [docs/05-defect-management/triage-and-duplicates.md](../docs/05-defect-management/triage-and-duplicates.md) | Триаж и дубликаты | defects | 3044 | 2026-07-30 | active | internal |
 | [docs/06-web-testing/cookies-sessions-cache.md](../docs/06-web-testing/cookies-sessions-cache.md) | Cookie, сессии и кэш | web | 2988 | 2026-07-30 | active | mixed |
@@ -88,7 +88,7 @@ source_priority: "internal"
 | [docs/09-automation/qa-toolkit.md](../docs/09-automation/qa-toolkit.md) | Безопасный QA toolkit | automation | 5076 | 2026-08-03 | active | mixed |
 | [docs/09-automation/static-and-test-effectiveness.md](../docs/09-automation/static-and-test-effectiveness.md) | Статические проверки и эффективность тестов | automation | 2386 | 2026-08-03 | active | official-docs |
 | [docs/09-automation/test-pyramid.md](../docs/09-automation/test-pyramid.md) | Пирамида тестирования | automation | 3040 | 2026-07-30 | active | mixed |
-| [docs/09-automation/ui-evidence-runner.md](../docs/09-automation/ui-evidence-runner.md) | Раннер UI-доказательств | automation | 10146 | 2026-08-03 | active | internal |
+| [docs/09-automation/ui-evidence-runner.md](../docs/09-automation/ui-evidence-runner.md) | Раннер UI-доказательств | automation | 12755 | 2026-08-03 | active | internal |
 | [docs/10-performance/index.md](../docs/10-performance/index.md) | Производительность | performance | 2259 | 2026-08-03 | active | internal |
 | [docs/10-performance/load-types.md](../docs/10-performance/load-types.md) | Виды нагрузочного тестирования | performance | 2968 | 2026-07-30 | active | mixed |
 | [docs/10-performance/metrics.md](../docs/10-performance/metrics.md) | Метрики производительности | performance | 3145 | 2026-07-30 | active | official-docs |
@@ -102,7 +102,7 @@ source_priority: "internal"
 | [docs/12-process-and-metrics/test-data.md](../docs/12-process-and-metrics/test-data.md) | Тестовые данные | process | 3235 | 2026-07-30 | active | internal |
 | [docs/12-process-and-metrics/testing-metrics.md](../docs/12-process-and-metrics/testing-metrics.md) | Метрики тестирования | process | 3252 | 2026-07-30 | active | mixed |
 | [docs/13-playbooks/api-qa.md](../docs/13-playbooks/api-qa.md) | QA API | playbook | 4116 | 2026-08-03 | active | mixed |
-| [docs/13-playbooks/ecommerce-qa.md](../docs/13-playbooks/ecommerce-qa.md) | QA интернет-магазина | playbook | 3638 | 2026-07-30 | active | internal |
+| [docs/13-playbooks/ecommerce-qa.md](../docs/13-playbooks/ecommerce-qa.md) | QA интернет-магазина | playbook | 5860 | 2026-07-30 | active | internal |
 | [docs/13-playbooks/index.md](../docs/13-playbooks/index.md) | Playbooks | playbook | 1867 | 2026-07-30 | active | internal |
 | [docs/13-playbooks/landing-page-qa.md](../docs/13-playbooks/landing-page-qa.md) | QA лендинга | playbook | 2970 | 2026-07-30 | active | internal |
 | [docs/13-playbooks/mobile-app-qa.md](../docs/13-playbooks/mobile-app-qa.md) | QA мобильного приложения | playbook | 3903 | 2026-08-03 | active | internal |
@@ -125,6 +125,7 @@ source_priority: "internal"
 | [patterns/perf/single-user-image-background-load-assessment.md](../patterns/perf/single-user-image-background-load-assessment.md) | Pattern: оценка загрузки изображений и фонов для одного пользователя | pattern | 4931 | 2026-08-03 | active | internal |
 | [patterns/process/blocked-target-browser-config.md](../patterns/process/blocked-target-browser-config.md) | Pattern: подбор конфигурации браузера, когда сайт не отдаётся скриптам | pattern | 4839 | 2026-08-03 | active | internal |
 | [patterns/process/disposable-mailbox-full-flow.md](../patterns/process/disposable-mailbox-full-flow.md) | Pattern: одноразовый почтовый ящик для полного прохождения регистрации, входа и восстановления пароля | pattern | 6039 | 2026-08-04 | active | internal |
+| [patterns/process/hidden-mobile-duplicate-blocks.md](../patterns/process/hidden-mobile-duplicate-blocks.md) | Pattern: скрытая мобильная копия блока ломает автоматический прогон | pattern | 3259 | 2026-08-05 | active | internal |
 | [patterns/process/negative-form-validation-without-signup.md](../patterns/process/negative-form-validation-without-signup.md) | Pattern: негативная проверка полей формы без создания учётной записи | pattern | 3888 | 2026-08-04 | active | internal |
 | [patterns/process/report-validator-gate.md](../patterns/process/report-validator-gate.md) | Pattern: независимый валидатор отчёта как гейт сдачи | pattern | 2863 | 2026-07-30 | active | internal |
 | [patterns/ui/computed-style-hover-proof.md](../patterns/ui/computed-style-hover-proof.md) | Pattern: доказательство отсутствия hover через вычисленные стили | pattern | 2986 | 2026-07-31 | active | internal |
@@ -141,7 +142,7 @@ source_priority: "internal"
 |------|-----------|-----------|-------|---------|--------|-----------------|
 | [prompts/defect-review.md](../prompts/defect-review.md) | Самопроверка дефекта перед оформлением | prompt | 2084 | 2026-07-30 | active | internal |
 | [prompts/post-task-learning-review.md](../prompts/post-task-learning-review.md) | Разбор опыта после заказа | prompt | 2364 | 2026-07-30 | active | internal |
-| [prompts/qa-intake-questions.md](../prompts/qa-intake-questions.md) | Вопросы при приёме заказа | prompt | 2007 | 2026-07-30 | active | internal |
+| [prompts/qa-intake-questions.md](../prompts/qa-intake-questions.md) | Вопросы при приёме заказа | prompt | 2430 | 2026-07-30 | active | internal |
 
 ## checklists
 
