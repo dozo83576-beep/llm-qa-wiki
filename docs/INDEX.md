@@ -1,7 +1,7 @@
 ---
 title: "QA Wiki INDEX"
 category: "navigation"
-updated: "2026-08-04"
+updated: "2026-08-05"
 status: "active"
 tags: ["index", "navigation"]
 source_priority: "internal"
@@ -13,11 +13,11 @@ source_priority: "internal"
 
 ## Сводка
 
-- Всего документов: **129**
-- Активных: **126**
+- Всего документов: **131**
+- Активных: **128**
 - Redirect-stubs: **0**
 - Archived: **0**
-- Суммарный объём: **431698** символов
+- Суммарный объём: **440201** символов
 
 ## docs
 
@@ -132,6 +132,7 @@ source_priority: "internal"
 | [patterns/ui/fullscreen-web-screenshot-evidence.md](../patterns/ui/fullscreen-web-screenshot-evidence.md) | Pattern: полноэкранные скриншоты веб-страниц без обрезок | pattern | 13050 | 2026-08-03 | active | mixed |
 | [patterns/ui/pixel-contrast-on-image-background.md](../patterns/ui/pixel-contrast-on-image-background.md) | Pattern: замер контраста, когда под текстом фоновая картинка | pattern | 2741 | 2026-07-31 | active | internal |
 | [patterns/ui/pixel-diff-hover-proof.md](../patterns/ui/pixel-diff-hover-proof.md) | Pattern: попиксельная проверка ховера — когда стили меняются, а экран нет | pattern | 2999 | 2026-07-31 | active | internal |
+| [patterns/ui/visible-text-node-not-outer-link.md](../patterns/ui/visible-text-node-not-outer-link.md) | Pattern: искать реальный видимый текстовый узел, если у ссылки font-size: 0 | pattern | 2431 | 2026-08-05 | active | internal |
 | [patterns/ui/visual-regression-baseline-review.md](../patterns/ui/visual-regression-baseline-review.md) | Pattern: управляемый baseline visual regression | pattern | 2574 | 2026-08-03 | active | mixed |
 
 ## prompts
@@ -163,7 +164,7 @@ source_priority: "internal"
 | [bug-taxonomy/forms-validation.md](../bug-taxonomy/forms-validation.md) | Дефекты форм и валидации | bug-taxonomy | 5210 | 2026-08-04 | active | internal |
 | [bug-taxonomy/index.md](../bug-taxonomy/index.md) | Таксономия дефектов | bug-taxonomy | 1611 | 2026-07-30 | active | internal |
 | [bug-taxonomy/navigation.md](../bug-taxonomy/navigation.md) | Дефекты навигации | bug-taxonomy | 2874 | 2026-07-30 | active | internal |
-| [bug-taxonomy/ui-states.md](../bug-taxonomy/ui-states.md) | Дефекты состояний интерфейса | bug-taxonomy | 9487 | 2026-08-01 | active | internal |
+| [bug-taxonomy/ui-states.md](../bug-taxonomy/ui-states.md) | Дефекты состояний интерфейса | bug-taxonomy | 12329 | 2026-08-01 | active | internal |
 
 ## case-studies
 
@@ -180,6 +181,7 @@ source_priority: "internal"
 | [lessons-learned/2026-08-04-agent-safety-classifier-blocks-order-submit.md](../lessons-learned/2026-08-04-agent-safety-classifier-blocks-order-submit.md) | Lesson: агентный рантайм может заблокировать клик по кнопке оформления заказа независимо от намерения кейса | lesson | 3569 | 2026-08-04 | active | internal |
 | [lessons-learned/2026-08-04-evidence-runner-failure-is-not-a-finding.md](../lessons-learned/2026-08-04-evidence-runner-failure-is-not-a-finding.md) | Lesson: сбой сборщика доказательств — не находка о сайте; после трёх разных попыток кейс уходит в Blocked и на ручную съёмку | lesson | 4809 | 2026-08-04 | active | internal |
 | [lessons-learned/2026-08-04-verify-ui-claims-with-screenshot-not-assumption.md](../lessons-learned/2026-08-04-verify-ui-claims-with-screenshot-not-assumption.md) | Lesson: утверждение о видимости/отсутствии элемента интерфейса подтверждай скриншотом в нужный момент, а не логом или памятью о шаге | lesson | 4634 | 2026-08-04 | active | internal |
+| [lessons-learned/2026-08-05-scroll-recon-needs-actual-scroll-not-just-position-check.md](../lessons-learned/2026-08-05-scroll-recon-needs-actual-scroll-not-just-position-check.md) | Lesson: вывод «шапка не фиксируется» по CSS-декларации в покое можно ошибиться | lesson | 3230 | 2026-08-05 | active | internal |
 | [lessons-learned/_template.md](../lessons-learned/_template.md) | Lesson: <краткая формулировка вывода> | lesson | 723 | YYYY-MM-DD | active | internal |
 | [lessons-learned/production-form-side-effects.md](../lessons-learned/production-form-side-effects.md) | Lesson: на продакшене проверяй защиту от побочных эффектов до серии, и на своём канале | lesson | 3103 | 2026-08-02 | active | internal |
 

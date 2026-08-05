@@ -1,6 +1,6 @@
 {
-  "chunk_count": 987,
-  "corpus_hash": "93ff3025ba58e29673c86d10e98e379f689dcb2196984a4ca7d11150536f2b84",
+  "chunk_count": 1001,
+  "corpus_hash": "029fe3fb6dea9d4ead37959deba6ca0b8a65ffaf33adee804503da068a6a8cc2",
   "embedding_model": null,
   "files_indexed": [
     "bug-taxonomy/data-and-state.md",
@@ -113,6 +113,7 @@
     "lessons-learned/2026-08-04-agent-safety-classifier-blocks-order-submit.md",
     "lessons-learned/2026-08-04-evidence-runner-failure-is-not-a-finding.md",
     "lessons-learned/2026-08-04-verify-ui-claims-with-screenshot-not-assumption.md",
+    "lessons-learned/2026-08-05-scroll-recon-needs-actual-scroll-not-just-position-check.md",
     "lessons-learned/production-form-side-effects.md",
     "patterns/perf/single-user-image-background-load-assessment.md",
     "patterns/process/blocked-target-browser-config.md",
@@ -124,12 +125,13 @@
     "patterns/ui/fullscreen-web-screenshot-evidence.md",
     "patterns/ui/pixel-contrast-on-image-background.md",
     "patterns/ui/pixel-diff-hover-proof.md",
+    "patterns/ui/visible-text-node-not-outer-link.md",
     "patterns/ui/visual-regression-baseline-review.md",
     "prompts/defect-review.md",
     "prompts/post-task-learning-review.md",
     "prompts/qa-intake-questions.md"
   ],
-  "generated_at": "2026-08-04T14:41:18Z",
+  "generated_at": "2026-08-05T01:45:46Z",
   "has_vectors": false,
   "retrieval_mode": "offline-text"
 }
