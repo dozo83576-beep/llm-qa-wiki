@@ -13,11 +13,11 @@ source_priority: "internal"
 
 ## Сводка
 
-- Всего документов: **131**
-- Активных: **128**
+- Всего документов: **132**
+- Активных: **129**
 - Redirect-stubs: **0**
 - Archived: **0**
-- Суммарный объём: **440201** символов
+- Суммарный объём: **444625** символов
 
 ## docs
 
@@ -181,6 +181,7 @@ source_priority: "internal"
 | [lessons-learned/2026-08-04-agent-safety-classifier-blocks-order-submit.md](../lessons-learned/2026-08-04-agent-safety-classifier-blocks-order-submit.md) | Lesson: агентный рантайм может заблокировать клик по кнопке оформления заказа независимо от намерения кейса | lesson | 3569 | 2026-08-04 | active | internal |
 | [lessons-learned/2026-08-04-evidence-runner-failure-is-not-a-finding.md](../lessons-learned/2026-08-04-evidence-runner-failure-is-not-a-finding.md) | Lesson: сбой сборщика доказательств — не находка о сайте; после трёх разных попыток кейс уходит в Blocked и на ручную съёмку | lesson | 4809 | 2026-08-04 | active | internal |
 | [lessons-learned/2026-08-04-verify-ui-claims-with-screenshot-not-assumption.md](../lessons-learned/2026-08-04-verify-ui-claims-with-screenshot-not-assumption.md) | Lesson: утверждение о видимости/отсутствии элемента интерфейса подтверждай скриншотом в нужный момент, а не логом или памятью о шаге | lesson | 4634 | 2026-08-04 | active | internal |
+| [lessons-learned/2026-08-05-fixed-wait-produced-false-defect-in-delivered-report.md](../lessons-learned/2026-08-05-fixed-wait-produced-false-defect-in-delivered-report.md) | Lesson: фиксированная пауза в скрипте доказательств отправила заказчику ложный дефект | lesson | 4424 | 2026-08-05 | active | internal |
 | [lessons-learned/2026-08-05-scroll-recon-needs-actual-scroll-not-just-position-check.md](../lessons-learned/2026-08-05-scroll-recon-needs-actual-scroll-not-just-position-check.md) | Lesson: вывод «шапка не фиксируется» по CSS-декларации в покое можно ошибиться | lesson | 3230 | 2026-08-05 | active | internal |
 | [lessons-learned/_template.md](../lessons-learned/_template.md) | Lesson: <краткая формулировка вывода> | lesson | 723 | YYYY-MM-DD | active | internal |
 | [lessons-learned/production-form-side-effects.md](../lessons-learned/production-form-side-effects.md) | Lesson: на продакшене проверяй защиту от побочных эффектов до серии, и на своём канале | lesson | 3103 | 2026-08-02 | active | internal |
